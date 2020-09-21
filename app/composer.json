@@ -19,7 +19,8 @@
         "ext-phalcon": "^4.0.0",
         "phalcon/migrations": "^1.1",
         "vlucas/phpdotenv": "^4.0",
-        "guzzlehttp/guzzle": "^6.5"
+        "guzzlehttp/guzzle": "^6.5",
+        "altorouter/altorouter": "^2.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.5"
