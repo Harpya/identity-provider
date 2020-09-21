@@ -1,38 +1,61 @@
 <?php
 declare(strict_types=1);
 
-/**
- * This file is part of the Invo.
- *
- * (c) Phalcon Team <team@phalcon.io>
- *
- * For the full copyright and license information, please view
- * the LICENSE file that was distributed with this source code.
- */
-
 namespace Harpya\IP\Controllers;
+
+use Harpya\IP\Services\AuthService;
 
 class AuthController extends BaseController
 {
     public function initialize()
     {
         parent::initialize();
-
-        $this->tag->setTitle('Welcome');
     }
 
+    /**
+     *
+     */
     public function signupAction(): void
     {
         if ($this->request->isPost()) {
-            if (!$this->security->checkTokenOk($this)) {
+            try {
+                $this->checkCsrfToken();
+                $response = AuthService::getInstance()->execSignup($this);
+            } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
                 $this->dispatcher->forward([
                     'controller' => 'errors',
                     'action' => 'show500',
                 ]);
                 return ;
+            } catch (\Harpya\IP\Exceptions\ValidationException $ex) {
+                $this->dispatcher->forward([
+                    'controller' => 'index',
+                    'action' => 'signup',
+                    'params' => [
+                        [
+                            'error' => true,
+                            'msg' => $ex->getMessage(),
+                            'status_code' => 400
+                        ]
+                    ]
+                ]);
+                return ;
             }
+            if (is_null($response)) {
+                $response = '';
+            }
+            $this->response->setContent($response);
+        } else {
+            $this->dispatcher->forward([
+                'controller' => 'index',
+                'action' => 'index',
+            ]);
+            return ;
         }
-        print_r($_REQUEST);
-        exit;
+    }
+
+    protected function checkCsrfToken()
+    {
+        return $this->security->checkTokenOk($this);
     }
 }

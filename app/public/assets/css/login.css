@@ -78,10 +78,6 @@ form .error {
     color: #ff0000;
 }
 
-#frm-signup {
-    display: none;
-}
-
-#frm-reset-password {
+.frm-hidden {
     display: none;
 }

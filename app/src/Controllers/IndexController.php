@@ -12,17 +12,53 @@ declare(strict_types=1);
 
 namespace Harpya\IP\Controllers;
 
+use Phalcon\Mvc\View;
+
 class IndexController extends BaseController
 {
     public function initialize()
     {
         parent::initialize();
-
-        $this->tag->setTitle('Welcome');
     }
 
-    public function indexAction(): void
+    /**
+     * Workaround to not add "Action" in the method.
+     */
+    public function __call($name, $parms)
+    {
+        if ('Action' === substr($name, -6)) {
+            $expectedMethod = substr($name, 0, -6);
+            $resp = \call_user_func_array([$this, $expectedMethod], $parms);
+        }
+
+        if ($resp) {
+            if (\is_scalar($resp)) {
+                $this->response->setContent($resp);
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    public function indexAction()
     {
         $this->setupCsrfToken();
+    }
+
+    /**
+     *
+     */
+    public function signupAction($params = null)
+    {
+        $this->view->setVar('frmClasses', ['signup' => 'normal']);
+        $this->setupCsrfToken();
+        if (isset($params['error']) && $params['error']) {
+            $this->view->setVar('notice', 'Error: ' . $params['msg']);
+            $this->flash->notice(
+                'Error: ' . $params['msg']
+            );
+            $this->response->setStatusCode($params['status_code']);
+        }
     }
 }

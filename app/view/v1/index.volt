@@ -22,7 +22,8 @@
 
 
 
-                <div id="frm-login">
+                <div id="frm-login" class="{{ frmClasses['login']|default('frm-hidden')}}">
+
                     <div class="myform form ">
                         <div class="logo mb-3">
                             <div class="col-md-12 text-center">
@@ -31,6 +32,12 @@
                         </div>
                         <form action="/auth/login" method="post" name="login">
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
+
+                            {% if notice %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ notice }}
+                            </div>
+                            {% endif %}
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>
@@ -83,8 +90,7 @@
                 </div>
 
 
-
-                <div id="frm-signup">
+                <div id="frm-signup" class="{{ frmClasses['signup']|default('frm-hidden')}}">
                     <div class="myform form ">
                         <div class="logo mb-3">
                             <div class="col-md-12 text-center">
@@ -93,11 +99,15 @@
                         </div>
                         <form action="/auth/signup" method="post" name="registration">
 
-                            key={{ csrfKey }} <br>
-                            token={{ csrfValue }} <br>
 
 
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
+
+                            {% if notice %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ notice }}
+                            </div>
+                            {% endif %}
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>
@@ -128,7 +138,7 @@
                     </form>
                 </div>
 
-                <div id="frm-reset-password">
+                <div id="frm-reset-password" class="{{ frmClasses['reset']|default('frm-hidden')}}">
                     <div class="myform form ">
                         <div class="logo mb-3">
                             <div class="col-md-12 text-center">
@@ -137,6 +147,12 @@
                         </div>
                         <form action="/auth/forgot" name="reset-password">
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
+
+                            {% if notice %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ notice }}
+                            </div>
+                            {% endif %}
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>
