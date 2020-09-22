@@ -33,11 +33,8 @@
                         <form action="/auth/login" method="post" name="login">
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
 
-                            {% if notice %}
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                {{ notice }}
-                            </div>
-                            {% endif %}
+                            {{ partial('notification') }}
+
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>
@@ -81,7 +78,8 @@
                             </div>
 
                             <div class="form-group">
-                                <p class="text-center">Don't have account? <a href="#" class="signup">Sign up here</a>
+                                <p class="text-center">Don't have account? <a href="#" class="signup">Sign up
+                                        here</a>
                                 </p>
                             </div>
                         </form>
@@ -103,11 +101,7 @@
 
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
 
-                            {% if notice %}
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                {{ notice }}
-                            </div>
-                            {% endif %}
+                            {{ partial('notification') }}
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>
@@ -148,11 +142,8 @@
                         <form action="/auth/forgot" name="reset-password">
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
 
-                            {% if notice %}
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                {{ notice }}
-                            </div>
-                            {% endif %}
+                            {{ partial('notification') }}
+
 
                             <div class="form-group">
                                 <label for="exampleInputEmail1">Email address</label>

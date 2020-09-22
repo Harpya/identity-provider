@@ -40,6 +40,7 @@ services:
     working_dir: ${PHP_APP_DIR}
     depends_on:
       - webserver
+      - db_transactional
     volumes:
       - ${PROJECT_SOURCE_PATH}:${PHP_APP_DIR}
     environment:
@@ -50,6 +51,37 @@ services:
     networks:
       public_net:
 
+#
+# Transactional DB
+#
+  db_transactional:
+    build:
+      context: .docker
+      dockerfile: db-timescale/Dockerfile
+    environment: 
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_DBNAME}
+    ports: 
+      - "2345:5432"
+    volumes:
+      - vol_db_transactional:/var/lib/postgresql/data
+    networks:
+      public_net:
+    
+#
+# Web IDE to access db_transactional
+#
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db_transactional
+    ports:
+      - 12345:8080
+
+volumes:
+  vol_db_transactional:
 
 networks:
   public_net:

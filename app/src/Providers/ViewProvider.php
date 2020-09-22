@@ -16,6 +16,9 @@ class ViewProvider implements ServiceProviderInterface
         $di->setShared('view', function () use ($viewsDir) {
             $view = new View();
             $view->setViewsDir($viewsDir);
+            $view->setLayoutsDir($viewsDir . '/layouts/');
+            $view->setPartialsDir($viewsDir . '/partials/');
+
             $view->registerEngines([
                 '.volt' => 'volt'
             ]);

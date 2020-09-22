@@ -10,7 +10,7 @@ return new Config([
         'username' => getenv('DB_USERNAME'),
         'password' => getenv('DB_PASSWORD'),
         'dbname' => getenv('DB_DBNAME'),
-        'charset' => getenv('DB_CHARSET'),
+        // 'charset' => getenv('DB_CHARSET'),
     ],
     'application' => [
         'viewsDir' => getenv('VIEWS_DIR'),

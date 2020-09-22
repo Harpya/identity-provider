@@ -8,6 +8,13 @@ class SignupTest extends TestCase
 {
     use HasHTTPClient;
 
+    public static $currentEmail = '';
+
+    protected function generateNewEmail()
+    {
+        static::$currentEmail = 'test_' . microtime(true) . substr(hash('sha256', time() . random_bytes(10)), 0, 10) . '@domain.com';
+    }
+
     /** @test */
     public function testErrorSignupInvalidCsrfToken()
     {
@@ -36,13 +43,15 @@ class SignupTest extends TestCase
 
         list($csrfKey, $csrfToken) = static::getCsrfToken($html);
 
+        $pass = hash('sha256', '123');
         try {
             $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
                 'cookies' => $jar,
                 'form_params' => [
                     $csrfKey => $csrfToken,
                     'email' => 'invalidEmail',
-                    'password' => hash('sha256', '123')
+                    'password' => $pass,
+                    'confirm_password' => $pass
                 ]
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
@@ -57,13 +66,58 @@ class SignupTest extends TestCase
     /** @test */
     public function testSignupInvalidSmallPassword()
     {
-        $this->assertFalse(false);
+        $jar = new \GuzzleHttp\Cookie\CookieJar();
+        $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $html = $response->getBody()->getContents();
+
+        list($csrfKey, $csrfToken) = static::getCsrfToken($html);
+
+        try {
+            $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
+                'cookies' => $jar,
+                'form_params' => [
+                    $csrfKey => $csrfToken,
+                    'email' => 'validEmail@domain.com',
+                    'password' => '123'
+                ]
+            ]);
+            echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
+            $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
+        } catch (GuzzleHttp\Exception\ClientException $ex) {
+            $this->assertEquals(400, $ex->getResponse()->getStatusCode());
+            $text = $ex->getResponse()->getBody()->getContents();
+            $this->assertTrue(strpos($text, 'Small password') !== false);
+        }
     }
 
     /** @test */
     public function testSignupPasswordDoesNotMatchConfirmation()
     {
-        $this->assertFalse(false);
+        $jar = new \GuzzleHttp\Cookie\CookieJar();
+        $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $html = $response->getBody()->getContents();
+
+        list($csrfKey, $csrfToken) = static::getCsrfToken($html);
+        $pass = hash('sha256', '123');
+        try {
+            $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
+                'cookies' => $jar,
+                'form_params' => [
+                    $csrfKey => $csrfToken,
+                    'email' => 'validEmail@domain.com',
+                    'password' => $pass,
+                    'confirm_password' => 'abcdefghjkl'
+                ]
+            ]);
+            echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
+            $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
+        } catch (GuzzleHttp\Exception\ClientException $ex) {
+            $this->assertEquals(400, $ex->getResponse()->getStatusCode());
+            $text = $ex->getResponse()->getBody()->getContents();
+            $this->assertTrue(strpos($text, 'password confirmation does not match') !== false);
+        }
     }
 
     /** @test */
@@ -87,6 +141,8 @@ class SignupTest extends TestCase
     /** @test */
     public function testSignupOk()
     {
+        static::generateNewEmail();
+
         $jar = new \GuzzleHttp\Cookie\CookieJar();
         $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
         $this->assertEquals(200, $response->getStatusCode());
@@ -94,21 +150,51 @@ class SignupTest extends TestCase
 
         list($csrfKey, $csrfToken) = static::getCsrfToken($html);
 
+        $pass = hash('sha256', '123');
         $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
             'cookies' => $jar,
             'form_params' => [
                 $csrfKey => $csrfToken,
-                'email' => 'myEmail@domain.com',
-                'password' => hash('sha256', '123')
+                'email' => static::$currentEmail,
+                'password' => $pass,
+                'confirm_password' => $pass
             ]
         ]);
-
         $this->assertEquals(200, $submitted->getStatusCode());
+        $text = $submitted->getBody()->getContents();
+        $this->assertTrue(strpos($text, 'created with success') !== false);
+        $this->assertTrue(strpos($text, static::$currentEmail) !== false);
     }
 
-    /** @test */
+    /**
+     * @test
+     * @depends testSignupOk
+     */
     public function testSignupEmailAlreadyExists()
     {
+        $jar = new \GuzzleHttp\Cookie\CookieJar();
+        $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $html = $response->getBody()->getContents();
+
+        list($csrfKey, $csrfToken) = static::getCsrfToken($html);
+
+        try {
+            $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
+                'cookies' => $jar,
+                'form_params' => [
+                    $csrfKey => $csrfToken,
+                    'email' => static::$currentEmail,
+                    'password' => hash('sha256', '123')
+                ]
+            ]);
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
+            $text = $ex->getResponse()->getBody()->getContents();
+            $this->assertEquals(400, $ex->getResponse()->getStatusCode());
+            $this->assertTrue(strpos($text, 'Error creating') !== false);
+            $this->assertTrue(strpos($text, static::$currentEmail) !== false);
+        }
+
         $this->assertFalse(false);
     }
 }

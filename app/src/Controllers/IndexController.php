@@ -41,24 +41,19 @@ class IndexController extends BaseController
     /**
      *
      */
-    public function indexAction()
+    public function indexAction($parms = null)
     {
         $this->setupCsrfToken();
+        $this->prepareFeedback($parms);
     }
 
     /**
      *
      */
-    public function signupAction($params = null)
+    public function signupAction($parms = null)
     {
         $this->view->setVar('frmClasses', ['signup' => 'normal']);
         $this->setupCsrfToken();
-        if (isset($params['error']) && $params['error']) {
-            $this->view->setVar('notice', 'Error: ' . $params['msg']);
-            $this->flash->notice(
-                'Error: ' . $params['msg']
-            );
-            $this->response->setStatusCode($params['status_code']);
-        }
+        $this->prepareFeedback($parms);
     }
 }

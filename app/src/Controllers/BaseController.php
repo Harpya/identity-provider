@@ -36,4 +36,27 @@ class BaseController extends Controller
         $this->view->csrfKey = $csrfKey;
         $this->view->csrfValue = $csrfValue;
     }
+
+    /**
+     *
+     */
+    protected function prepareFeedback($parms) : void
+    {
+        if (!$parms) {
+            return;
+        }
+        if (isset($parms['error']) && $parms['error']) {
+            $this->view->setVar('error', true);
+        } else {
+            $this->view->setVar('error', false);
+        }
+
+        if (isset($parms['msg'])) {
+            $this->view->setVar('msg', $parms['msg']);
+        }
+
+        if (isset($parms['status_code'])) {
+            $this->response->setStatusCode($parms['status_code']);
+        }
+    }
 }
