@@ -1,0 +1,13 @@
+<IfModule mod_negotiation.c>        
+	Options -MultiViews  
+ </IfModule> 
+
+<IfModule mod_rewrite.c>  
+  RewriteEngine On
+  RewriteRule .* - [E=HTTP_CONTENT_TYPE:%{HTTP:Content-Type}]
+    RewriteCond %{REQUEST_FILENAME} !-d 
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L] 
+    RewriteCond %{HTTP:Authorization} ^(.*)
+	RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+  </IfModule>
