@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Harpya\IP\Controllers;
 
-use Harpya\IP\Services\AuthService;
+use Harpya\IP\VOs\SignupVO;
+use Harpya\IP\VOs\LoginVO;
 
 class AuthController extends BaseController
 {
@@ -20,7 +21,18 @@ class AuthController extends BaseController
         if ($this->request->isPost()) {
             try {
                 $this->checkCsrfToken();
-                $response = AuthService::getInstance()->execSignup($this);
+
+                $response = \Harpya\IP\Services\Signup::execute(
+                    SignupVO::factory(
+                        SignupVO::class,
+                    [
+                        'email' => $this->request->getPost('email'),
+                        'password' => $this->request->getPost('password'),
+                        'confirm_password' => $this->request->getPost('confirm_password'),
+                        'accept_terms' => $this->request->getPost('accept_terms')
+                    ]
+                    )
+                )->toArray();
             } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
                 $this->dispatcher->forward([
                     'controller' => 'errors',
@@ -85,7 +97,18 @@ class AuthController extends BaseController
         if ($this->request->isPost()) {
             try {
                 $this->checkCsrfToken();
-                $response = AuthService::getInstance()->execLogin($this);
+
+                $response = \Harpya\IP\Services\Login::execute(
+                    LoginVO::factory(
+                        LoginVO::class,
+                    [
+                        'email' => $this->request->getPost('email'),
+                        'password' => $this->request->getPost('password')
+                    ]
+                    )
+                )->toArray();
+
+                // if everything ok, set session and proceed to requestor
             } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
                 $this->dispatcher->forward([
                     'controller' => 'errors',
