@@ -18,6 +18,7 @@ class BaseController extends Controller
         $this->tag->setTitle('Login');
         $this->view->setVar('frmClasses', ['login' => 'normal']);
         $this->view->setVar('notice', '');
+        $this->view->setVar('link_terms', '<a href="#">terms</a>');
     }
 
     /**
