@@ -104,28 +104,37 @@
                             {{ partial('notification') }}
 
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Email address</label>
+                                <label for="email">Email address</label>
                                 <input type="email" name="email" class="form-control" id="email"
                                     aria-describedby="emailHelp" placeholder="Enter email">
                             </div>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Password</label>
+                                <label for="password">Password</label>
                                 <input type="password" name="password" id="password" class="form-control"
-                                    aria-describedby="emailHelp" placeholder="Enter Password">
+                                    aria-describedby="passwordHelp" placeholder="Enter Password">
                             </div>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Confirm password</label>
+                                <label for="confirm_password">Confirm password</label>
                                 <input type="password" name="confirm_password" id="confirm_password"
-                                    class="form-control" aria-describedby="emailHelp" placeholder="Confirm Password">
+                                    class="form-control" aria-describedby="confirmPasswordHelp"
+                                    placeholder="Confirm Password">
+                            </div>
+                            <div class="form-group">
+                                <label for="accept_terms">
+                                    <input type="checkbox" name="accept_terms" id="accept_terms" value="yes"
+                                        aria-describedby="acceptTermsHelp" placeholder="Accept terms and conditions" />
+                                    Accept {{ link_terms }} and conditions</label>
                             </div>
                             <div class="col-md-12 text-center mb-3">
-                                <button type="submit" class=" btn btn-block mybtn btn-primary tx-tfm">
-                                    Get Started For Free
+                                <button type="submit" id="btn_submit" class="btn btn-block mybtn btn-primary tx-tfm"
+                                    disabled>
+                                    Signup
                                 </button>
                             </div>
                             <div class="col-md-12 ">
                                 <div class="form-group">
-                                    <p class="text-center"><a href="#" class="signin">Already have an account?</a></p>
+                                    <p class="text-center"><a href="#" class="signin">Already have an account? Click
+                                            here to login</a></p>
                                 </div>
                             </div>
                     </div>

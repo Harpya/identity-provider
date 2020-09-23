@@ -1,20 +1,9 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+include_once __DIR__ . '/bootstrap.php';
 
-include_once __DIR__ . '/../HasHTTPClient.php';
-
-class SignupTest extends TestCase
+class SignupTest extends End2EndTestBase
 {
-    use HasHTTPClient;
-
-    public static $currentEmail = '';
-
-    protected function generateNewEmail()
-    {
-        static::$currentEmail = 'test_' . microtime(true) . substr(hash('sha256', time() . random_bytes(10)), 0, 10) . '@domain.com';
-    }
-
     /** @test */
     public function testErrorSignupInvalidCsrfToken()
     {
@@ -51,15 +40,14 @@ class SignupTest extends TestCase
                     $csrfKey => $csrfToken,
                     'email' => 'invalidEmail',
                     'password' => $pass,
-                    'confirm_password' => $pass
+                    'confirm_password' => $pass,
+                    'accept_terms' => 'yes'
                 ]
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
         } catch (GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
-            // } catch (GuzzleHttp\Exception\ServerException $ex) {
-        //     $this->assertEquals(400, $ex->getResponse()->getStatusCode());
         }
     }
 
@@ -79,7 +67,8 @@ class SignupTest extends TestCase
                 'form_params' => [
                     $csrfKey => $csrfToken,
                     'email' => 'validEmail@domain.com',
-                    'password' => '123'
+                    'password' => '123',
+                    'accept_terms' => 'yes'
                 ]
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
@@ -108,10 +97,10 @@ class SignupTest extends TestCase
                     $csrfKey => $csrfToken,
                     'email' => 'validEmail@domain.com',
                     'password' => $pass,
-                    'confirm_password' => 'abcdefghjkl'
+                    'confirm_password' => 'abcdefghjkl',
+                    'accept_terms' => 'yes'
                 ]
             ]);
-            echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
         } catch (GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
@@ -123,19 +112,29 @@ class SignupTest extends TestCase
     /** @test */
     public function testSignupInvalidNotAcceptTerms()
     {
-        $this->assertFalse(false);
-    }
+        $jar = new \GuzzleHttp\Cookie\CookieJar();
+        $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $html = $response->getBody()->getContents();
 
-    protected static function getCsrfToken($html)
-    {
-        $pattern = '/<input type=\'hidden\'\s*name=\'(\w+)\'\s+value=\'(\w+)\'\s*\/>/';
-        $csrfArray = [];
-        preg_match($pattern, $html, $csrfArray);
-
-        assert(is_array($csrfArray));
-        assert(3 === count($csrfArray));
-
-        return [$csrfArray[1], $csrfArray[2]];
+        list($csrfKey, $csrfToken) = static::getCsrfToken($html);
+        $pass = hash('sha256', '123');
+        try {
+            $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
+                'cookies' => $jar,
+                'form_params' => [
+                    $csrfKey => $csrfToken,
+                    'email' => 'validEmail@domain.com',
+                    'password' => $pass,
+                    'confirm_password' => $pass,
+                ]
+            ]);
+            $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
+        } catch (GuzzleHttp\Exception\ClientException $ex) {
+            $this->assertEquals(400, $ex->getResponse()->getStatusCode());
+            $text = $ex->getResponse()->getBody()->getContents();
+            $this->assertTrue(strpos($text, 'It is necessary accept the terms') !== false);
+        }
     }
 
     /** @test */
@@ -157,7 +156,8 @@ class SignupTest extends TestCase
                 $csrfKey => $csrfToken,
                 'email' => static::$currentEmail,
                 'password' => $pass,
-                'confirm_password' => $pass
+                'confirm_password' => $pass,
+                'accept_terms' => 'yes'
             ]
         ]);
         $this->assertEquals(200, $submitted->getStatusCode());
@@ -185,7 +185,8 @@ class SignupTest extends TestCase
                 'form_params' => [
                     $csrfKey => $csrfToken,
                     'email' => static::$currentEmail,
-                    'password' => hash('sha256', '123')
+                    'password' => hash('sha256', '123'),
+                    'accept_terms' => 'yes'
                 ]
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $ex) {

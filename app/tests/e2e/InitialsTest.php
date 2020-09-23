@@ -2,12 +2,10 @@
 
 use PHPUnit\Framework\TestCase;
 
-include_once __DIR__ . '/../HasHTTPClient.php';
+include_once __DIR__ . '/bootstrap.php';
 
-class InitialsTest extends TestCase
+class InitialsTest extends End2EndTestBase
 {
-    use HasHTTPClient;
-
     /** @test */
     public function testShowInitialPage()
     {

@@ -16,4 +16,13 @@ class User extends Model
     {
         $this->setSource('users');
     }
+
+    public static function authenticate($email, $password)
+    {
+        $resp = static::findFirst([
+            'email = :email: and authentication_string = :password:',
+            'bind' => ['email' => $email, 'password' => $password]
+        ]);
+        return $resp;
+    }
 }

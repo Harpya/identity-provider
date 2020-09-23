@@ -162,6 +162,19 @@ $(function () {
 
 $(function () {
 
+	$("#accept_terms").on('change', function (e) {
+		var shouldBeDisabled = true;
+		if ($(this).is(':checked')) {
+			shouldBeDisabled = false;
+		} else {
+			shouldBeDisabled = true;
+		}
+		console.log(shouldBeDisabled);
+		$("#btn_submit").prop('disabled', shouldBeDisabled);
+	});
+
+
+
 	$("form[name='registration']").validate({
 		rules: {
 			email: {
