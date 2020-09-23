@@ -30,24 +30,21 @@
                                 <h1>Login</h1>
                             </div>
                         </div>
-                        <form action="/auth/login" method="post" name="login">
+                        <form action="/auth/login" method="post" name="frm-login">
                             <input type='hidden' name='{{ csrfKey }}' value='{{ csrfValue }}' />
 
                             {{ partial('notification') }}
 
 
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Email address</label>
-                                <input type="email" name="email" class="form-control" id="email"
+                                <label for="login-email">Email address</label>
+                                <input type="email" name="email" class="form-control" id="login-email"
                                     aria-describedby="emailHelp" placeholder="Enter email">
                             </div>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Password</label>
-                                <input type="password" name="password" id="password" class="form-control"
+                                <label for="login-password">Password</label>
+                                <input type="password" name="password" id="login-password" class="form-control"
                                     aria-describedby="emailHelp" placeholder="Enter Password">
-                            </div>
-                            <div class="form-group">
-                                <p class="text-center">By signing up you accept our <a href="#">Terms Of Use</a></p>
                             </div>
                             <div class="col-md-12 text-center ">
                                 <button type="submit" class=" btn btn-block mybtn btn-primary tx-tfm">Login</button>
@@ -95,7 +92,7 @@
                                 <h1>Signup</h1>
                             </div>
                         </div>
-                        <form action="/auth/signup" method="post" name="registration">
+                        <form action="/auth/signup" method="post" name="frm-signup">
 
 
 
