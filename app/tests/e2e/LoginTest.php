@@ -162,8 +162,40 @@ class LoginTest extends End2EndTestBase
      */
     public function testLoginOk()
     {
-        // assertions
-        $this->assertFalse(false);
+        $jar = new \GuzzleHttp\Cookie\CookieJar();
+        $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $html = $response->getBody()->getContents();
+
+        list($csrfKey, $csrfToken) = static::getCsrfToken($html);
+
+        // try {
+        $submitted = static::getClient()->request('post', static::getURL('/auth/login'), [
+            'cookies' => $jar,
+            'form_params' => [
+                $csrfKey => $csrfToken,
+                'email' => static::$currentEmail,
+                'password' => static::$currentPassword,
+            ]
+        ]);
+
+        $this->assertTrue(true);
+
+        // TODO: find a better way to test it
+        // // $text = $submitted->getBody()->getContents();
+
+        // print_r($submitted->getHeaders());
+        // exit;
+
+        // echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
+        // exit;
+        //     $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
+        // } catch (GuzzleHttp\Exception\ClientException $ex) {
+        //     $this->assertEquals(400, $ex->getResponse()->getStatusCode());
+        //     $text = $ex->getResponse()->getBody()->getContents();
+        //     $this->assertTrue(strpos($text, 'Invalid email or password') !== false);
+        // }
+        //
     }
 
     /**
