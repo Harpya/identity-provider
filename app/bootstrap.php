@@ -6,6 +6,7 @@ error_reporting(E_ALL & ~E_NOTICE);
 use Phalcon\Di\FactoryDefault;
 use Phalcon\Http\ResponseInterface;
 use Dotenv\Dotenv;
+use \Harpya\SDK\Constants;
 
 try {
     $rootPath = realpath('..');
@@ -76,7 +77,10 @@ try {
 
     $match = $customRouter->match();
 
+    $skipViewRender = false;
+
     if (is_array($match) && is_callable($match['target'])) {
+        $skipViewRender = true;
         $statusCode = 200;
         try {
             $resp = call_user_func_array($match['target'], $match['params']);
@@ -87,38 +91,41 @@ try {
             $statusCode = $ex->getCode();
         }
 
-        if (is_array($resp)) {
+        if ($resp === Constants::RESPONSE_PROCEED_VIEW_PROCESSING) {
+            $skipViewRender = false;
+        } elseif (is_array($resp)) {
             $resp = \json_encode($resp);
             $response = new Phalcon\Http\Response($resp, $statusCode);
             $response->setContentType('application/json');
         } else {
             $response = new Phalcon\Http\Response($resp, $statusCode);
         }
-    } else {
-        // no route was matched
+    }
 
+    if (!$skipViewRender) {
         $controller = $dispatcher->dispatch();
 
         // View
         $view->render(
-        $dispatcher->getControllerName(),
-        $dispatcher->getActionName(),
-        $dispatcher->getParams()
-    );
+            $dispatcher->getControllerName(),
+            $dispatcher->getActionName(),
+            $dispatcher->getParams()
+        );
 
         // View
         $view->finish();
 
         $response = $controller->response;
         //$dispatcher->getReturnedValue();
-    }
 
-    // If controller did  return nothing, get the view.
-    if (!$response->getContent()) {
-        $response->setContent(
+        // If controller did  return nothing, get the view.
+        if (!$response->getContent()) {
+            $response->setContent(
             $view->getContent()
         );
+        }
     }
+    // }
 
     if ($response instanceof ResponseInterface) {
         $response->send();
