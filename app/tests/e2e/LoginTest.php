@@ -1,5 +1,7 @@
 <?php
 
+namespace e2e;
+
 include_once __DIR__ . '/bootstrap.php';
 
 class LoginTest extends End2EndTestBase
@@ -9,6 +11,7 @@ class LoginTest extends End2EndTestBase
     {
         $jar = new \GuzzleHttp\Cookie\CookieJar();
         $response = static::getClient()->request('GET', static::getURL(), ['cookies' => $jar]);
+
         $this->assertEquals(200, $response->getStatusCode());
         $html = $response->getBody()->getContents();
 
@@ -16,7 +19,7 @@ class LoginTest extends End2EndTestBase
             $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
                 'cookies' => $jar
             ]);
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             // } catch (GuzzleHttp\Exception\ServerException $ex) {
         //     $this->assertEquals(500, $ex->getResponse()->getStatusCode());
@@ -76,7 +79,7 @@ class LoginTest extends End2EndTestBase
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'Email not informed') !== false);
@@ -85,7 +88,7 @@ class LoginTest extends End2EndTestBase
 
     /**
      * @test
-     * @todo
+     * @depends testSignupOk
      */
     public function testNoPasswordInformed()
     {
@@ -107,7 +110,7 @@ class LoginTest extends End2EndTestBase
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'Password not informed') !== false);
@@ -116,7 +119,7 @@ class LoginTest extends End2EndTestBase
 
     /**
      * @test
-     * @todo
+     * @depends testSignupOk
      */
     public function testEmailDoesNotExists()
     {
@@ -138,7 +141,7 @@ class LoginTest extends End2EndTestBase
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'Invalid email or password') !== false);
@@ -148,7 +151,7 @@ class LoginTest extends End2EndTestBase
 
     /**
      * @test
-     * @todo
+     * @depends testSignupOk
      */
     public function testInvalidLoginMultipleTries()
     {
@@ -158,7 +161,7 @@ class LoginTest extends End2EndTestBase
 
     /**
      * @test
-     * @todo
+     * @depends testSignupOk
      */
     public function testLoginOk()
     {
@@ -169,38 +172,24 @@ class LoginTest extends End2EndTestBase
 
         list($csrfKey, $csrfToken) = static::getCsrfToken($html);
 
-        // try {
-        $submitted = static::getClient()->request('post', static::getURL('/auth/login'), [
-            'cookies' => $jar,
-            'form_params' => [
-                $csrfKey => $csrfToken,
-                'email' => static::$currentEmail,
-                'password' => static::$currentPassword,
-            ]
-        ]);
-
-        $this->assertTrue(true);
-
-        // TODO: find a better way to test it
-        // // $text = $submitted->getBody()->getContents();
-
-        // print_r($submitted->getHeaders());
-        // exit;
-
-        // echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
-        // exit;
-        //     $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        // } catch (GuzzleHttp\Exception\ClientException $ex) {
-        //     $this->assertEquals(400, $ex->getResponse()->getStatusCode());
-        //     $text = $ex->getResponse()->getBody()->getContents();
-        //     $this->assertTrue(strpos($text, 'Invalid email or password') !== false);
-        // }
-        //
+        try {
+            $submitted = static::getClient()->request('post', static::getURL('/auth/login'), [
+                'cookies' => $jar,
+                'form_params' => [
+                    $csrfKey => $csrfToken,
+                    'email' => static::$currentEmail,
+                    'password' => static::$currentPassword,
+                ]
+            ]);
+            $this->assertTrue(false, 'Not expected to reach here');
+        } catch (\GuzzleHttp\Exception\ConnectException $ex) {
+            $this->assertTrue(strpos($ex->getMessage(), 'Failed to connect to') !== false);
+        }
     }
 
     /**
      * @test
-     * @todo
+     * @depends testSignupOk
      */
     public function testHitLoginAlreadyAuthenticated()
     {

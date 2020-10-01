@@ -1,5 +1,7 @@
 <?php
 
+namespace unit\VOs;
+
 use PHPUnit\Framework\TestCase;
 use Harpya\IP\VOs\SignupVO;
 

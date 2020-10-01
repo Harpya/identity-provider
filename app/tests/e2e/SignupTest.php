@@ -1,5 +1,7 @@
 <?php
 
+namespace e2e;
+
 include_once __DIR__ . '/bootstrap.php';
 
 class SignupTest extends End2EndTestBase
@@ -15,9 +17,9 @@ class SignupTest extends End2EndTestBase
             $submitted = static::getClient()->request('post', static::getURL('/auth/signup'), [
                 'cookies' => $jar
             ]);
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
-        } catch (GuzzleHttp\Exception\ServerException $ex) {
+        } catch (\GuzzleHttp\Exception\ServerException $ex) {
             $this->assertEquals(500, $ex->getResponse()->getStatusCode());
         }
     }
@@ -46,7 +48,7 @@ class SignupTest extends End2EndTestBase
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
         }
     }
@@ -73,7 +75,7 @@ class SignupTest extends End2EndTestBase
             ]);
             echo "\n\nResponse = " . $submitted->getBody()->getContents() . "\n\n";
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'Small password') !== false);
@@ -102,7 +104,7 @@ class SignupTest extends End2EndTestBase
                 ]
             ]);
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'password confirmation does not match') !== false);
@@ -130,7 +132,7 @@ class SignupTest extends End2EndTestBase
                 ]
             ]);
             $this->assertTrue(false, 'Expected this test fail: expected httpCode 400');
-        } catch (GuzzleHttp\Exception\ClientException $ex) {
+        } catch (\GuzzleHttp\Exception\ClientException $ex) {
             $this->assertEquals(400, $ex->getResponse()->getStatusCode());
             $text = $ex->getResponse()->getBody()->getContents();
             $this->assertTrue(strpos($text, 'It is necessary accept the terms') !== false);
