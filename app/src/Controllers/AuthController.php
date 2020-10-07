@@ -90,6 +90,9 @@ class AuthController extends BaseController
         }
     }
 
+    /**
+     *
+     */
     public function loginAction()
     {
         if ($this->request->isPost()) {
@@ -134,6 +137,10 @@ class AuthController extends BaseController
                         $sessionEstablished->app_id = $authRequest->app_id;
                     }
 
+                    if (substr($urlRedirect, -1) !== '/') {
+                        $urlRedirect .= '/';
+                    }
+
                     // 2. Store user data in session
                     // $_SESSION['user'] = $user;
 
@@ -148,8 +155,6 @@ class AuthController extends BaseController
                     // $remoteSessionID = hash('sha256', time() . \random_bytes(20));
 
                     // 4. make a call to application to authorize this user
-                    // $url = $initialRequest['authorize'];
-                    // $url = 'http://host.docker.internal:1991/authorize';
                     if ($urlAuthorize) {
                         $client = new \GuzzleHttp\Client();
                         try {
@@ -171,11 +176,8 @@ class AuthController extends BaseController
                         $appReturnContents = $appReturn->getBody()->getContents();
                     }
                     $sessionEstablished->save();
-                    // echo 'http://localhost:1991' . '/t/' . $remoteSessionID;
-                    // exit;
 
                     // redirect to requestor
-                    // $this->response->setContent(json_encode(['token' => $token]));
                     $this->response->setStatusCode(302);
 
                     $this->response->setHeader(

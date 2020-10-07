@@ -57,13 +57,6 @@ class IndexController extends BaseController
         // 1. Decode the $t package
         $request = Application::decodeAuthRequestToken($t);
 
-        // $pack = base64_encode(json_encode([
-        //     'authorize' => 'http://localhost:1991/authorize',
-        //     'application_id' => 'A0D47F',
-        //     'application_token' => 'abcdef0123456789',
-        //     'client_ip' => $_SERVER['REMOTE_ADDR']
-        // ]));
-
         // 2. Validate data
         //      application_id with application_token
         //      client_ip should match
@@ -72,17 +65,6 @@ class IndexController extends BaseController
 
         // 3. Store these data in session
         $this->session->set('request', $request);
-        //$_SESSION['request'] = $request;
-
-        $x = $this->session->get('request');
-
-        $count++;
-        // 4. Show the login page
-
-        // echo 'Ok... <pre>';
-        // echo "\n $t \n";
-        // print_r($this->request->getHeaders());
-        // exit;
     }
 
     /**

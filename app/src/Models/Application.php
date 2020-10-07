@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Harpya\IP\Models;
 
 use Phalcon\Mvc\Model;
+use Harpya\IP\Constants;
 
 class Application extends Model
 {
@@ -35,6 +36,16 @@ class Application extends Model
      */
     public static function getSecretHash($appID, $secret)
     {
-        return hash('sha256', $appID . ':' . $secret);
+        $salt = \getenv(Constants::CONFIG_SALT_TOKEN) ?? '';
+        return hash('sha256', $salt . ':' . $appID . ':' . $secret);
+    }
+
+    /**
+     *
+     */
+    public static function generateSecret()
+    {
+        $salt = \getenv(Constants::CONFIG_SALT_TOKEN) ?? '';
+        return hash('sha256', $salt . \random_bytes(20) . \microtime(true));
     }
 }

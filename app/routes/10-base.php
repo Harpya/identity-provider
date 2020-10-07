@@ -92,7 +92,7 @@ $router->addPost('/api/v1/auth_request', function ($request = null, $parms = nul
     //     return $response;
     // }
 
-    if ($input[Utils::KEY_TOKEN]) {
+    if ($input[Constants::KEY_TOKEN]) {
         // check if this token still active. Is a expired session in the client, and
         // may be possible still active in this I.P. instance. If so, will just return
         // a response to refresh the session on WebApp.
@@ -106,7 +106,7 @@ $router->addPost('/api/v1/auth_request', function ($request = null, $parms = nul
 
     // Generate a new token
 
-    $input[Utils::KEY_TOKEN] = Utils::generateRandomToken();
+    $input[Constants::KEY_TOKEN] = Utils::generateRandomToken();
 
     $authRequest = new AuthRequest();
 
