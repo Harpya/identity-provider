@@ -1,0 +1,63 @@
+#!/usr/local/bin/php -q
+<?php
+
+declare(strict_types=1);
+
+include_once __DIR__ . '/../vendor/autoload.php';
+
+// use Exception;
+use Phalcon\Cli\Console;
+use Phalcon\Cli\Dispatcher;
+use Phalcon\Di\FactoryDefault\Cli as CliDI;
+use Phalcon\Exception as PhalconException;
+use Phalcon\Loader;
+use Dotenv\Dotenv;
+
+$container = new CliDI();
+
+$rootPath = realpath(__DIR__ . '/..');
+Dotenv::createImmutable($rootPath)->load();
+
+$container->offsetSet('rootPath', function () use ($rootPath) {
+    return $rootPath;
+});
+
+$dispatcher = new Dispatcher();
+
+$dispatcher->setDefaultNamespace('Harpya\CLI\Tasks');
+$container->setShared('dispatcher', $dispatcher);
+
+$providers = [
+    \Harpya\IP\Providers\ConfigProvider::class,
+    \Harpya\IP\Providers\DatabaseProvider::class,
+];
+
+foreach ($providers as $provider) {
+    $container->register(new $provider());
+}
+
+$console = new Console($container);
+
+$arguments = [];
+foreach ($argv as $k => $arg) {
+    if ($k === 1) {
+        $arguments['task'] = $arg;
+    } elseif ($k === 2) {
+        $arguments['action'] = $arg;
+    } elseif ($k >= 3) {
+        $arguments['params'][] = $arg;
+    }
+}
+
+try {
+    $console->handle($arguments);
+} catch (PhalconException $e) {
+    fwrite(STDERR, $e->getMessage() . PHP_EOL);
+    exit(1);
+} catch (Throwable $throwable) {
+    fwrite(STDERR, $throwable->getMessage() . PHP_EOL);
+    exit(1);
+} catch (Exception $exception) {
+    fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+    exit(1);
+}

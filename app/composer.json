@@ -3,15 +3,15 @@
     "description": "General Identity provider micro-service",
     "type": "project",
     "license": "MIT",
-    "authors": [
-        {
-            "name": "Eduardo Luz",
-            "email": "eduardo@eduardo-luz.com"
-        }
-    ],
+    "authors": [{
+        "name": "Eduardo Luz",
+        "email": "eduardo@eduardo-luz.com"
+    }],
     "autoload": {
         "psr-4": {
-            "Harpya\\IP\\": "src/"
+            "Harpya\\CLI\\": "cli/",
+            "Harpya\\IP\\": "src/",
+            "Harpya\\SDK\\": "/srv/app/lib/sdk/src/"
         }
     },
     "require": {
