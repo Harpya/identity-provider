@@ -12,10 +12,12 @@ try {
     $rootPath = realpath('..');
     require_once $rootPath . '/vendor/autoload.php';
 
-    /**
-     * Load ENV variables
-     */
-    Dotenv::createImmutable($rootPath)->load();
+    if (file_exists($rootPath . '/.env')) {
+        /**
+         * Load ENV variables
+         */
+        Dotenv::createImmutable($rootPath)->load();
+    }
 
     $di = new FactoryDefault();
 
@@ -77,10 +79,10 @@ try {
 
     $match = $customRouter->match();
 
-    $skipViewRender = false;
+    $processViewRender = true;
 
     if (is_array($match) && is_callable($match['target'])) {
-        $skipViewRender = true;
+        $processViewRender = false;
         $statusCode = 200;
         try {
             $resp = call_user_func_array($match['target'], $match['params']);
@@ -92,7 +94,7 @@ try {
         }
 
         if ($resp === Constants::RESPONSE_PROCEED_VIEW_PROCESSING) {
-            $skipViewRender = false;
+            $processViewRender = true;
         } elseif (is_array($resp)) {
             $resp = \json_encode($resp);
             $response = new Phalcon\Http\Response($resp, $statusCode);
@@ -102,7 +104,7 @@ try {
         }
     }
 
-    if (!$skipViewRender) {
+    if ($processViewRender) {
         $controller = $dispatcher->dispatch();
 
         // View

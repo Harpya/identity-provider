@@ -24,12 +24,27 @@ class SessionProvider implements ServiceProviderInterface
 {
     public function register(DiInterface $di): void
     {
-        $di->setShared('session', function () {
+        $di->setShared('session', function () use ($di) {
             $session = new SessionManager();
-            $files = new SessionAdapter([
-                'savePath' => sys_get_temp_dir(),
-            ]);
-            $session->setAdapter($files);
+            // $files = new SessionAdapter([
+            //     'savePath' => sys_get_temp_dir(),
+            // ]);
+            // $session->setAdapter($files);
+
+            $dbConfig = $di->getShared('config')->get('database')->toArray();
+
+            $dbClass = 'Phalcon\Db\Adapter\Pdo\\' . $dbConfig['adapter'];
+            unset($dbConfig['adapter']);
+
+            $pdo = new $dbClass($dbConfig);
+
+            // //'col_sessid' => 'sess_id', 'col_data' => 'sess_data', 'col_last_activity' => 'last_activity'
+            $dbSession = new \Harpya\IP\Lib\DBSessionAdapter(
+                $pdo
+            );
+
+            $session->setAdapter($dbSession);
+
             $session->start();
 
             return $session;

@@ -137,7 +137,7 @@ class AuthController extends BaseController
                         $sessionEstablished->app_id = $authRequest->app_id;
                     }
 
-                    if (substr($urlRedirect, -1) !== '/') {
+                    if (!$urlRedirect || (is_string($urlRedirect) && substr($urlRedirect, -1) !== '/')) {
                         $urlRedirect .= '/';
                     }
 
@@ -150,7 +150,12 @@ class AuthController extends BaseController
 
                     $sessionEstablished->token = $token;
 
-                    $sessionEstablished->valid_until = time() + (60 * 60 * 24); // 1 day
+                    $ttl = getenv('CONFIG_SESSION_TTL');
+                    if (!$ttl) {
+                        $ttl = (60 * 60 * 24); // 1 day
+                    }
+
+                    $sessionEstablished->valid_until = time() + $ttl;
 
                     // $remoteSessionID = hash('sha256', time() . \random_bytes(20));
 
@@ -176,6 +181,11 @@ class AuthController extends BaseController
                         $appReturnContents = $appReturn->getBody()->getContents();
                     }
                     $sessionEstablished->save();
+
+                    $this->session->set(
+                                'auth_data',
+                                $sessionEstablished->jsonSerialize()
+                            );
 
                     // redirect to requestor
                     $this->response->setStatusCode(302);

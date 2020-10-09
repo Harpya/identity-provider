@@ -52,6 +52,33 @@ $router->addGet('/login/[:token]', function ($request = null, $parms = null, $di
     return Constants::RESPONSE_PROCEED_VIEW_PROCESSING;
 });
 
+$router->addGet('/', function ($request = null, $parms = null, $di = null) {
+    $authData = $di->get('session')->get('auth_data');
+
+    if (is_array($authData) &&
+                isset($authData['valid_until']) &&
+                $authData['valid_until'] > time()
+                // Add IP check
+                // Add same user-agent check
+                 ) {
+        return 'Still a valid session here' ;
+    }
+    $di->get('dispatcher')->forward([
+        'controller' => 'index',
+        'action' => 'index',
+    ]);
+    return Constants::RESPONSE_PROCEED_VIEW_PROCESSING;
+});
+
+$router->addGet('/logout', function ($request = null, $parms = null, $di = null) {
+    $di->get('session')->remove('auth_data');
+    $di->get('dispatcher')->forward([
+        'controller' => 'index',
+        'action' => 'index',
+    ]);
+    return Constants::RESPONSE_PROCEED_VIEW_PROCESSING;
+});
+
 $router->addPost('/api/v1/auth_request', function ($request = null, $parms = null, $di = null) {
     $response = [];
 
