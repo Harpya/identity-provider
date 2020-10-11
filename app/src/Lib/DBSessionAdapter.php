@@ -88,7 +88,7 @@ class DBSessionAdapter implements \SessionHandlerInterface
             $this->connection->query("
                 INSERT INTO {$table}
                 ({$col_sessid}, {$col_data}, {$col_la},{$col_user_id}, {$col_addr_id})
-                VALUES ('{$sess_id}','{$data}', {$time}, {$userID}, {$ip})
+                VALUES ('{$sess_id}','{$data}', {$time}, {$userID}, '{$ip}')
             ");
         }
 
