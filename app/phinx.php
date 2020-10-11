@@ -6,10 +6,12 @@ use Dotenv\Dotenv;
 
 $rootPath = realpath(__DIR__);
 
+if (file_exists($rootPath . '/.env')) {
     /**
      * Load ENV variables
      */
     Dotenv::createImmutable($rootPath)->load();
+}
 
 $defaultConfig = [
     'adapter' => 'pgsql',
