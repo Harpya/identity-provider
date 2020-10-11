@@ -182,6 +182,9 @@ class AuthController extends BaseController
                     }
                     $sessionEstablished->save();
 
+                    $this->session->getAdapter()->userID = $user->id;
+                    $this->session->getAdapter()->ip = $_SERVER['REMOTE_ADDR'];
+
                     $this->session->set(
                                 'auth_data',
                                 $sessionEstablished->jsonSerialize()

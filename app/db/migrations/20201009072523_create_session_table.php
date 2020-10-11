@@ -19,9 +19,10 @@ final class CreateSessionTable extends AbstractMigration
     public function up(): void
     {
         $this->table('sessions', ['id' => false, 'primary_key' => ['sess_id']])
+            ->addColumn('user_id', 'biginteger', ['null' => false])
+            ->addColumn('last_activity', 'biginteger')
             ->addColumn('sess_id', 'string')
             ->addColumn('sess_data', 'string', ['length' => 4096])
-            ->addColumn('last_activity', 'biginteger')
             ->addColumn('ip', 'string', ['null' => true, 'length' => 15])
             ->save();
     }

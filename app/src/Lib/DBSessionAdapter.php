@@ -17,7 +17,13 @@ class DBSessionAdapter implements \SessionHandlerInterface
     {
         $this->connection = $connection;
         $this->tablename = $tablename;
-        $this->configs = array_merge(['col_sessid' => 'sess_id', 'col_data' => 'sess_data', 'col_last_activity' => 'last_activity'], $configs);
+        $this->configs = array_merge([
+            'col_sessid' => 'sess_id',
+            'col_data' => 'sess_data',
+            'col_last_activity' => 'last_activity',
+            'col_user_id' => 'user_id',
+            'col_addr_id' => 'ip',
+        ], $configs);
     }
 
     public function open($save_path, $sess_name)
@@ -49,23 +55,40 @@ class DBSessionAdapter implements \SessionHandlerInterface
         $col_sessid = $this->configs['col_sessid'];
         $col_data = $this->configs['col_data'];
         $col_la = $this->configs['col_last_activity'];
+        $col_user_id = $this->configs['col_user_id'];
+        $col_addr_id = $this->configs['col_addr_id'];
+
+        $sData = \unserialize($data);
 
         $data = base64_encode($data);
         $time = time();
+
+        if (isset($this->userID)) {
+            $userID = $this->userID;
+        } else {
+            $userID = 0;
+        }
+        if (isset($this->ip)) {
+            $ip = $this->ip;
+        } else {
+            $ip = '-';
+        }
 
         if ($this->exists) {
             $this->connection->query("
                 UPDATE {$table} 
                 SET 
                     {$col_data} = '{$data}',
-                    {$col_la} = {$time}
+                    {$col_la} = {$time},
+                    {$col_user_id} = {$userID},
+                    {$col_addr_id} = '{$ip}'
                 WHERE {$col_sessid} = '{$sess_id}'
             ");
         } else {
             $this->connection->query("
                 INSERT INTO {$table}
-                ({$col_sessid}, {$col_data}, {$col_la})
-                VALUES ('{$sess_id}','{$data}', {$time})
+                ({$col_sessid}, {$col_data}, {$col_la},{$col_user_id}, {$col_addr_id})
+                VALUES ('{$sess_id}','{$data}', {$time}, {$userID}, {$ip})
             ");
         }
 
