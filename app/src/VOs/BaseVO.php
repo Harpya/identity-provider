@@ -28,6 +28,11 @@ class BaseVO
         return $obj;
     }
 
+    public function __construct($valuesToBind = [])
+    {
+        $this->bind($valuesToBind);
+    }
+
     /**
      *
      */

@@ -5,29 +5,21 @@ namespace Harpya\IP;
 
 use \Harpya\IP\Exceptions\ApplicationExection;
 use \Phalcon\Di;
+use Phalcon\Mvc\Micro;
 
-class Application
+class Application extends Micro
 {
     protected static $instance;
-
-    protected $di;
 
     public static function getInstance($di = null)
     {
         if (!static::$instance) {
-            // if (is_null($di)) {
-            //     throw new ApplicationExection('Falat error - incorrect use of getApplication');
-            // }
+            if (is_null($di)) {
+                throw new ApplicationExection('Fatal error - incorrect use of getApplication');
+            }
             static::$instance = new Application($di);
         }
         return static::$instance;
-    }
-
-    public function __construct($di = null)
-    {
-        if ($di) {
-            $this->di = $di;
-        }
     }
 
     /**
@@ -88,5 +80,19 @@ class Application
         // }
 
         // 3. Skipping "authorize" URL
+    }
+
+    /**
+     *
+     */
+    public function loadRoutesFromFolder($path)
+    {
+        $ls = glob($path . '/*.php');
+        $router = $this;
+        foreach ($ls as $filename) {
+            if (!\is_dir($filename)) {
+                include_once $filename;
+            }
+        }
     }
 }

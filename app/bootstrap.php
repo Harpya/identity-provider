@@ -104,13 +104,19 @@ try {
         }
     }
 
+    $controllerName = $dispatcher->getControllerName() ?? 'index';
+    $actionName = $dispatcher->getActionName() ?? 'index';
+
     if ($processViewRender) {
         $controller = $dispatcher->dispatch();
 
+        $controllerName = $dispatcher->getControllerName() ?? 'index';
+        $actionName = $dispatcher->getActionName() ?? 'index';
+
         // View
         $view->render(
-            $dispatcher->getControllerName(),
-            $dispatcher->getActionName(),
+            $controllerName,
+            $actionName,
             $dispatcher->getParams()
         );
 
@@ -123,8 +129,8 @@ try {
         // If controller did  return nothing, get the view.
         if (!$response->getContent()) {
             $response->setContent(
-            $view->getContent()
-        );
+                $view->getContent()
+            );
         }
     }
     // }

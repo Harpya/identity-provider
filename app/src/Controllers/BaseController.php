@@ -10,6 +10,23 @@ use Phalcon\Mvc\Controller;
  */
 class BaseController extends Controller
 {
+    public static $instance = [];
+
+    /**
+     *
+     */
+    public static function getInstance($di = null)
+    {
+        $className = static::class;
+        if (!static::$instance[$className]) {
+            static::$instance[$className] = new $className();
+            if ($di) {
+                static::$instance[$className]->setDI($di);
+            }
+        }
+        return static::$instance[$className];
+    }
+
     /**
      *
      */
@@ -59,5 +76,13 @@ class BaseController extends Controller
         if (isset($parms['status_code'])) {
             $this->response->setStatusCode($parms['status_code']);
         }
+    }
+
+    /**
+    * Utility method, to check if the CSRF token is valid.
+    */
+    protected function checkCsrfToken()
+    {
+        return $this->security->checkTokenOk($this);
     }
 }
