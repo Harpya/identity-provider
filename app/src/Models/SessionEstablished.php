@@ -11,6 +11,7 @@ class SessionEstablished extends Model
     public function initialize()
     {
         $this->setSource('sessions_established');
+        $this->belongsTo('user_id', 'User', 'id');
     }
 
     /**
@@ -29,5 +30,12 @@ class SessionEstablished extends Model
         $obj->app_id = 0;
 
         return $obj;
+    }
+
+    public function setStatus($status)
+    {
+        $this->status = $status;
+        $this->updated_at = 'now()';
+        return $this;
     }
 }

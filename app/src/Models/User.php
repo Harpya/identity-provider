@@ -15,6 +15,7 @@ class User extends Model
     public function initialize()
     {
         $this->setSource('users');
+        $this->hasMany('id', 'SessionEstablished', 'user_id');
     }
 
     public static function authenticate($email, $password)

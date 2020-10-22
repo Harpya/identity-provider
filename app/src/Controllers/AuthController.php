@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Harpya\IP\Controllers;
 
+use Harpya\IP\Constants as ConstantsIP;
 use Harpya\IP\VOs\SignupVO;
 use Harpya\IP\VOs\LoginVO;
 use \Harpya\IP\VOs\InitialAuthRequestVO;
@@ -11,6 +12,7 @@ use \Harpya\IP\Models\AuthRequest;
 use \Harpya\IP\Models\SessionEstablished;
 use \Harpya\IP\Services\ValidateInitialRequest;
 use \Harpya\SDK\IdentityProvider\Utils;
+use \Harpya\SDK\Constants;
 
 class AuthController extends BaseController
 {
@@ -77,7 +79,7 @@ class AuthController extends BaseController
         );
 
         $this->response->setContent($this->view->getContent());
-        $this->response->setStatusCode($response['status_code'] ?? 201);
+        $this->response->setStatusCode($response['status_code'] ?? 200);
 
         $this->response->send();
     }
@@ -118,18 +120,30 @@ class AuthController extends BaseController
 
             $userModel = $response['user'];
 
+            $this->session->getAdapter()->userID = $userModel->id;
+            $this->session->getAdapter()->ip = $_SERVER['REMOTE_ADDR'];
+
+            // Create  a service with all these steps below:
+            // (if configured) 2FA with Google Authenticator
+            // (if configured) 2FA with Email
+            // (if configured) 2FA with SMS
+            // (if configured) Send welcome email
+            // establish session, authorize it on caller App, and send back a redirection to User's Browser
+
             $sessionEstablishedModel = SessionEstablished::buildFromUserID($userModel->id);
 
             // 1. load token and request data
             $arrInitialRequest = $this->session->get('auth_request');
-
-            $authRequestModel = AuthRequest::findFirst(
-                $arrInitialRequest['id']
-            );
+            $authRequestModel = null;
+            if ($arrInitialRequest && isset($arrInitialRequest['id'])) {
+                $authRequestModel = AuthRequest::findFirst(
+                    $arrInitialRequest['id']
+                );
+            }
 
             // Initialize some variables
             $urlAuthorize = null;
-            $urlRedirect = getenv('CONFIG_DEFAULT_URL_AFTER_LOGIN');
+            $urlRedirect = getenv(ConstantsIP::CONFIG_DEFAULT_URL_AFTER_LOGIN);
             $sessionEstablishedModel->app_id = 0;
 
             // If $authRequestModel is NOT null, then change its stats and
@@ -154,6 +168,7 @@ class AuthController extends BaseController
 
             $sessionEstablishedModel->token = $token;
             $sessionEstablishedModel->valid_until = time() + Utils::getTTL();
+            $sessionEstablishedModel->remote_session_id = $remoteSessionID;
 
             // $remoteSessionID = hash('sha256', time() . \random_bytes(20));
 
@@ -202,9 +217,6 @@ class AuthController extends BaseController
             }
             $sessionEstablishedModel->save();
 
-            $this->session->getAdapter()->userID = $user->id;
-            $this->session->getAdapter()->ip = $_SERVER['REMOTE_ADDR'];
-
             $this->session->set(
                         'auth_data',
                         $sessionEstablishedModel->jsonSerialize()
@@ -215,7 +227,7 @@ class AuthController extends BaseController
 
             $this->response->setHeader(
                 'Location',
-                 $urlRedirect . $remoteSessionID
+                 $urlRedirect . $token
             );
             $this->response->send();
             return;
@@ -240,223 +252,206 @@ class AuthController extends BaseController
     /**
      *
      */
-    // public function signupAction___(): void
-    // {
-    //     if ($this->request->isPost()) {
-    //         try {
-    //             $this->checkCsrfToken();
+    public function authConfirm()
+    {
+        $tokenID = $this->request->get(Constants::KEY_TOKEN);
 
-    //             $response = \Harpya\IP\Services\Signup::execute(
-    //                 SignupVO::factory(
-    //                     SignupVO::class,
-    //                 [
-    //                     'email' => $this->request->getPost('email'),
-    //                     'password' => $this->request->getPost('password'),
-    //                     'confirm_password' => $this->request->getPost('confirm_password'),
-    //                     'accept_terms' => $this->request->getPost('accept_terms')
-    //                 ]
-    //                 )
-    //             )->toArray();
-    //         } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'errors',
-    //                 'action' => 'show500',
-    //             ]);
-    //             return ;
-    //         } catch (\Harpya\IP\Exceptions\ValidationException $ex) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'signup',
-    //                 'params' => [
-    //                     [
-    //                         'error' => true,
-    //                         'msg' => $ex->getMessage(),
-    //                         'status_code' => 400
-    //                     ]
-    //                 ]
-    //             ]);
-    //             return ;
-    //         }
+        $query = $this->modelsManager->createQuery(
+        'SELECT * FROM \Harpya\IP\Models\SessionEstablished as sess, 
+            \Harpya\IP\Models\User as usr WHERE
+            usr.id = sess.user_id 
+            AND sess.token = :token:'
+        );
 
-    //         if ($response['success']) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'index',
-    //                 'params' => [
-    //                     [
-    //                         'error' => false,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 200
-    //                     ]
-    //                 ]
-    //             ]);
-    //         } else {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'signup',
-    //                 'params' => [
-    //                     [
-    //                         'error' => true,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 400
-    //                     ]
-    //                 ]
-    //             ]);
-    //         }
-    //     } else {
-    //         $this->dispatcher->forward([
-    //             'controller' => 'index',
-    //             'action' => 'index',
-    //         ]);
-    //     }
-    // }
+        // Execute the query returning a result if any
+        $sessionCursor = $query->execute([
+            'token' => $tokenID
+        ]);
+        $arrRegs = $sessionCursor->jsonSerialize();
 
-    /**
-     *
-     */
-    // public function loginAction()
-    // {
-    //     if ($this->request->isPost()) {
-    //         try {
-    //             $this->checkCsrfToken();
+        $userModel = null;
+        $sessionEstablishedModel = null;
+        $validationErrors = [];
 
-    //             $response = \Harpya\IP\Services\Login::execute(
-    //                 LoginVO::factory(
-    //                     LoginVO::class,
-    //                 [
-    //                     'email' => $this->request->getPost('email'),
-    //                     'password' => $this->request->getPost('password')
-    //                 ]
-    //                 )
-    //             )->toArray();
+        if (count($arrRegs) == 0) {
+            $validationErrors[] = 'Session data not found';
+        } else {
+            $arrRecord = reset($arrRegs);
 
-    //             // if everything ok, set session and proceed to requestor
+            $sessionEstablishedModel = $arrRecord['harpya\IP\Models\SessionEstablished'];
+            $userModel = $arrRecord['harpya\IP\Models\User'];
 
-    //             $user = $response['user'];
-    //             if ($user) {
-    //                 $sessionEstablished = new SessionEstablished();
-    //                 $sessionEstablished->user_id = $user->id;
-    //                 $sessionEstablished->ip_address = $_SERVER['REMOTE_ADDR'];
+            if (time() > $sessionEstablishedModel->valid_until) {
+                $validationErrors[] = 'Token expired';
+            }
 
-    //                 // 1. load token and request data
-    //                 $initialRequest = $this->session->get('auth_request');
+            if ($sessionEstablishedModel->status !== 1) {
+                $validationErrors[] = 'Session already started';
+            }
 
-    //                 $authRequest = AuthRequest::findFirst(
-    //                     $initialRequest['id']
-    //                 );
+            if ($sessionEstablishedModel->ip_address !== $this->request->get(Constants::KEY_CLIENT_IP)) {
+                $validationErrors[] = 'Different IPs';
+            }
+        }
 
-    //                 if (is_null($authRequest)) {
-    //                     $urlAuthorize = null;
-    //                     $urlRedirect = getenv('CONFIG_DEFAULT_URL_AFTER_LOGIN');
-    //                     $sessionEstablished->app_id = 0;
-    //                 } else {
-    //                     $authRequest->status = AuthRequest::STATUS_FINISHED;
-    //                     $authRequest->save();
+        if (!$sessionEstablishedModel && !$userModel) {
+            $validationErrors[] = 'Invalid session data';
+        }
 
-    //                     $urlAuthorize = $authRequest->url_authorize;
-    //                     $urlRedirect = $authRequest->url_after_login;
-    //                     $sessionEstablished->app_id = $authRequest->app_id;
-    //                 }
+        // $sessionEstablishedModel = SessionEstablished::findFirst([
+        //     ' remote_session_id = :remote_session_id:  ',
+        //     'bind' => [
+        //         'remote_session_id' => $sessionID
+        //     ]
+        // ]);
 
-    //                 Utils::addSlashAtEnd($urlRedirect);
+        if (!empty($validationErrors)) {
+            $this->response->setStatusCode(403);
+            $this->response->setContent(json_encode([
+                'success' => false,
+                'msg' => 'Error during session validation',
+                'reasons' => $validationErrors
+            ]));
+            $this->response->send();
+            return ;
+        }
 
-    //                 // 2. Store user data in session
-    //                 // $_SESSION['user'] = $user;
+        $sessionEstablishedModel->setStatus(2)->save();
+        // $sessionEstablishedModel->status = 2;
+        // $sessionEstablishedModel->updated_at = 'now()';
+        // $sessionEstablishedModel->save();
 
-    //                 // 3. Create token
-    //                 $token = Utils::generateRandomToken();
-    //                 $remoteSessionID = Utils::generateRandomToken();
+        $this->response->setStatusCode(200);
 
-    //                 $sessionEstablished->token = $token;
+        $response = ['email' => $userModel->email, 'session_id' => $sessionEstablishedModel->remote_session_id];
+        // Constants::KEY_USER_EMAIL
 
-    //                 $sessionEstablished->valid_until = time() + Utils::getTTL();
+        $this->response->setContent(json_encode($response));
+        $this->response->send();
 
-    //                 // $remoteSessionID = hash('sha256', time() . \random_bytes(20));
+        return $response;
+    }
 
-    //                 // 4. make a call to application to authorize this user
-    //                 if ($urlAuthorize) {
-    //                     $client = new \GuzzleHttp\Client();
-    //                     try {
-    //                         $appReturn = $client->request('POST', $urlAuthorize, [
-    //                             'form_params' => [
-    //                                 'token' => $token,
-    //                                 'client_ip' => $_SERVER['REMOTE_ADDR'],
-    //                                 'email' => $user->email,
-    //                                 'session_id' => $remoteSessionID
-    //                             ]
-    //                         ]);
-    //                     } catch (\Exception $e) {
-    //                         echo '<pre>';
-    //                         echo $e->getMessage();
-    //                         echo "\n " . $e->getTraceAsString();
-    //                         exit;
-    //                     }
+    public function authRequest()
+    {
+        $response = [];
 
-    //                     $appReturnContents = $appReturn->getBody()->getContents();
-    //                 }
-    //                 $sessionEstablished->save();
+        $input[Constants::KEY_APPLICATION_ID] = $this->request->get(Constants::KEY_APPLICATION_ID);
+        $input[Constants::KEY_APPLICATION_SECRET] = $this->request->get(Constants::KEY_APPLICATION_SECRET);
 
-    //                 $this->session->getAdapter()->userID = $user->id;
-    //                 $this->session->getAdapter()->ip = $_SERVER['REMOTE_ADDR'];
+        $input[Constants::KEY_TOKEN] = $this->request->get(Constants::KEY_TOKEN);
+        $input[Constants::KEY_CLIENT_IP] = $this->request->get(Constants::KEY_CLIENT_IP);
+        $input[Constants::KEY_BASE_URL] = $this->request->get(Constants::KEY_BASE_URL);
 
-    //                 $this->session->set(
-    //                             'auth_data',
-    //                             $sessionEstablished->jsonSerialize()
-    //                         );
+        // Validate Application
+        $application = Application::findRegisteredApplication(
+                                    $input[Constants::KEY_APPLICATION_ID],
+                                    $input[Constants::KEY_APPLICATION_SECRET],
+                                    $_SERVER['REMOTE_ADDR']
+        );
 
-    //                 // redirect to requestor
-    //                 $this->response->setStatusCode(302);
+        if (!$application) {
+            http_response_code(403);
+            $response['msg'] = 'Application not found';
+            $response['success'] = false;
 
-    //                 $this->response->setHeader(
-    //                     'Location',
-    //                      $urlRedirect . $remoteSessionID
-    //                 );
-    //                 return;
-    //             }
-    //         } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'errors',
-    //                 'action' => 'show500',
-    //             ]);
-    //             return ;
-    //         }
+            $this->response->setStatusCode(302);
+            // $this->response->setHeader(
+            //     'Location',
+            //      $urlRedirect
+            // );
 
-    //         if ($response['success']) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'index',
-    //                 'params' => [
-    //                     [
-    //                         'error' => false,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 200
-    //                     ]
-    //                 ]
-    //             ]);
-    //         } else {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'index',
-    //                 'params' => [
-    //                     [
-    //                         'error' => true,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 400
-    //                     ]
-    //                 ]
-    //             ]);
-    //         }
-    //     } else {
-    //         // $this->dispatcher->forward([
-    //         //     'controller' => 'index',
-    //         //     'action' => 'index',
-    //         // ]);
-    //     }
-    // }
+            $this->response->setContent(json_encode($response));
+            $this->response->send();
+
+            return $response;
+        }
+
+        $appArr = $application->jsonSerialize();
+        // return [$appArr['id']];
+
+        // return ['x' => $application->jsonSerialize()];
+
+        // print_r($application);
+        // exit;
+
+        // // Validate Origin IP
+        // if ($input[Utils::KEY_CLIENT_IP] !== $_SERVER['REMOTE_ADDR']) {
+        //     http_response_code(403);
+        //     $response['msg'] = 'Origin does not match with initial request';
+        //     $response['success'] = false;
+        //     return $response;
+        // }
+
+        if ($input[Constants::KEY_TOKEN]) {
+            // check if this token still active. Is a expired session in the client, and
+            // may be possible still active in this I.P. instance. If so, will just return
+            // a response to refresh the session on WebApp.
+            // verify also if $input[Utils::KEY_CLIENT_IP] matches with record in
+            // current I.P. DB.
+        }
+
+        // @TODO validate and authorize properly Application based on these data
+        // $response[Utils::KEY_APPLICATION_ID] = $request->get(Utils::KEY_APPLICATION_ID);
+        // $response[Utils::KEY_APPLICATION_SECRET] = $request->get(Utils::KEY_APPLICATION_SECRET);
+
+        // Generate a new token
+
+        // $input[Constants::KEY_TOKEN] = Utils::generateRandomToken();
+        $tokenAuthRequest = Utils::generateRandomToken();
+
+        $authRequest = new AuthRequest();
+
+        $authRequest->app_id = $application->id;
+        $authRequest->valid_until = time() + 600;
+        $authRequest->token = $tokenAuthRequest;
+        $authRequest->ip_address = $input[Constants::KEY_CLIENT_IP];
+        $authRequest->url_authorize = $input[Constants::KEY_URL_AUTHORIZE] ?? $application->url_authorize;
+        $authRequest->url_after_login = $input[Constants::KEY_URL_AFTER_LOGIN] ?? $application->url_after_login;
+        $authRequest->save();
+
+        $response[Constants::KEY_TOKEN] = $tokenAuthRequest;
+
+        $response[Constants::KEY_CLIENT_IP] = $this->request->get(Constants::KEY_CLIENT_IP);
+        // $response[Constants::KEY_CLIENT_IP . '_'] = $_SERVER['REMOTE_ADDR'];
+
+        $response[Constants::KEY_ACTION] = Broker::ACTION_REDIRECT;
+
+        // create token, store data on DB, and send back the token
+
+        $response['authenticated'] = false;
+
+        $this->response->setContent(json_encode($response));
+        $this->response->send();
+    }
 
     // -------------------------------
     // UTILITY METHODS
     // ---------------
+
+    protected function getRegisteredApplication()
+    {
+        $application = Application::findRegisteredApplication(
+            $this->request->get(Constants::KEY_APPLICATION_ID),
+            $this->request->get(Constants::KEY_APPLICATION_SECRET),
+            $_SERVER['REMOTE_ADDR']
+        );
+        if ($application) {
+            return $application;
+        }
+        $response = [];
+        $this->response->setStatusCode(403);
+        // http_response_code(403);
+        $response['msg'] = 'Application not found';
+        $response['success'] = false;
+
+        $this->response->setStatusCode(302);
+
+        $this->response->setContent(json_encode($response));
+        $this->response->send();
+
+        return $response;
+    }
 
     /**
      * Utility method, to check if the CSRF token is valid.

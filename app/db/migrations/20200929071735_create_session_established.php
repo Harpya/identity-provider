@@ -14,6 +14,7 @@ final class CreateSessionEstablished extends AbstractMigration
 
             ->addColumn('status', 'smallinteger', ['default' => 1])
             ->addColumn('token', 'string', ['length' => 100, 'null' => true])
+            ->addColumn('remote_session_id', 'string', ['length' => 100, 'null' => true])
 
             ->addColumn('ip_address', 'string', ['length' => 20, 'null' => true])
             ->addTimestampsWithTimezone()
