@@ -12,7 +12,7 @@ class SessionBagProvider implements ServiceProviderInterface
     public function register(DiInterface $di): void
     {
         $di->setShared('sessionBag', function () {
-            return new Bag('bag');
+            return new Bag('authData');
         });
     }
 }

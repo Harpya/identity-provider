@@ -41,6 +41,10 @@ $app->post('/auth/login', function () use ($app) {
     AuthController::getInstance($app->getDI())->doLogin();
 });
 
+$app->get('/profile', function () use ($app) {
+    IdentityController::getInstance($app->getDI())->showProfile();
+});
+
 $app->post('/api/v1/auth_confirm', function () use ($app) {
     AuthController::getInstance($app->getDI())->authConfirm();
 });

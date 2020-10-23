@@ -7,6 +7,7 @@ use Phalcon\Di\DiInterface;
 use Phalcon\Di\ServiceProviderInterface;
 use Phalcon\Session\Adapter\Stream as SessionAdapter;
 use Harpya\IP\Lib\SessionManager;
+use Phalcon\Http\Response\Cookies;
 
 /**
  * Start the session the first time some component request the session service
@@ -29,9 +30,20 @@ class SessionProvider implements ServiceProviderInterface
 
             $session->setAdapter($dbSession);
 
-            $session->start();
+            // $session->start();
 
             return $session;
         });
+
+        $di->set(
+    'cookies',
+    function () {
+        $cookies = new Cookies();
+
+        $cookies->useEncryption(false);
+
+        return $cookies;
+    }
+);
     }
 }

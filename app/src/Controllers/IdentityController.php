@@ -194,4 +194,21 @@ class IdentityController extends BaseController
     //     // exit;
     //     return Constants::RESPONSE_PROCEED_VIEW_PROCESSING;
     // }
+
+    public function showProfile()
+    {
+        $this->session->start();
+        echo '<pre>';
+        var_dump($this->persistent->authData);
+        // show current logged user.
+        $sessionData = $this->session->get('auth_data');
+        print_r($sessionData);
+        echo "\n\n ----- \n";
+        echo $this->session->getId();
+        echo "\n\n ----- \n";
+        echo \session_id();
+        echo "\n\n ----- \n";
+        print_r($_SESSION);
+        exit;
+    }
 }

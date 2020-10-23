@@ -40,8 +40,32 @@ try {
         $di->register(new $provider());
     }
 
+    // if ($app->request->getHeader(''))
+
     $app = \Harpya\IP\Application::getInstance($di);
     $app->loadRoutesFromFolder($rootPath . '/routes');
+
+    // X-Skip-Session
+    if (!$app->request->getHeader('X-Skip-Session')) {
+        if ($app->cookies->has('sid')) {
+            $sid = $this->cookies->get('sid');
+
+            $app->session->setId($sid);
+        }
+
+        $app->session->start();
+        $lifetime = 600;
+        // setcookie(session_name(), session_id(), time() + $lifetime);
+
+        $app->cookies->set(
+            session_name(),
+            session_id(),
+            time() + $lifetime
+        );
+        $app->cookies->send();
+    }
+
+    $localAuthData = $app->session->get('auth_data');
 
     // $router = $di['router'];
 
@@ -147,7 +171,6 @@ try {
     //     $response->send();
     // }
 } catch (\Exception $e) {
-    
     echo $e->getMessage() . '<br>';
     echo '<pre>' . $e->getTraceAsString() . '</pre>';
 }

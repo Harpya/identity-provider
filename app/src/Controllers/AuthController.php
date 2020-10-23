@@ -10,9 +10,11 @@ use \Harpya\IP\VOs\InitialAuthRequestVO;
 use \Harpya\IP\VOs\InitialAuthResponseVO;
 use \Harpya\IP\Models\AuthRequest;
 use \Harpya\IP\Models\SessionEstablished;
+use \Harpya\IP\Models\Application as ApplicationModel;
 use \Harpya\IP\Services\ValidateInitialRequest;
-use \Harpya\SDK\IdentityProvider\Utils;
+use \Harpya\SDK\Utils;
 use \Harpya\SDK\Constants;
+use \Harpya\IP\Application;
 
 class AuthController extends BaseController
 {
@@ -118,6 +120,23 @@ class AuthController extends BaseController
                 return;
             }
 
+            $localAuthData = $this->session->get('auth_data');
+
+            $remoteSessionID = Utils::generateRandomToken();
+
+            $this->session->getAdapter()->markToRemoveSession(session_id());
+
+            $this->session->getAdapter()->setSessionID(Utils::getSIDFromSessionToken($remoteSessionID)) ;
+            // $this->session->start();
+            $lifetime = 600;
+
+            $this->cookies->set(
+                session_name(),
+                Utils::getSIDFromSessionToken($remoteSessionID),
+                time() + $lifetime
+            );
+            $this->cookies->send();
+
             $userModel = $response['user'];
 
             $this->session->getAdapter()->userID = $userModel->id;
@@ -164,7 +183,6 @@ class AuthController extends BaseController
 
             // 3. Create token
             $token = Utils::generateRandomToken();
-            $remoteSessionID = Utils::generateRandomToken();
 
             $sessionEstablishedModel->token = $token;
             $sessionEstablishedModel->valid_until = time() + Utils::getTTL();
@@ -217,10 +235,11 @@ class AuthController extends BaseController
             }
             $sessionEstablishedModel->save();
 
-            $this->session->set(
-                        'auth_data',
-                        $sessionEstablishedModel->jsonSerialize()
-                    );
+            $authData = $sessionEstablishedModel->jsonSerialize();
+
+            $sid = $this->session->getId();
+            $this->persistent->authData =
+                        $authData;
 
             // redirect to requestor
             $this->response->setStatusCode(302);
@@ -344,7 +363,7 @@ class AuthController extends BaseController
         $input[Constants::KEY_BASE_URL] = $this->request->get(Constants::KEY_BASE_URL);
 
         // Validate Application
-        $application = Application::findRegisteredApplication(
+        $application = ApplicationModel::findRegisteredApplication(
                                     $input[Constants::KEY_APPLICATION_ID],
                                     $input[Constants::KEY_APPLICATION_SECRET],
                                     $_SERVER['REMOTE_ADDR']
@@ -368,6 +387,8 @@ class AuthController extends BaseController
         }
 
         $appArr = $application->jsonSerialize();
+
+        $this->session->set('auth_data', $appArr);
         // return [$appArr['id']];
 
         // return ['x' => $application->jsonSerialize()];
@@ -415,7 +436,7 @@ class AuthController extends BaseController
         $response[Constants::KEY_CLIENT_IP] = $this->request->get(Constants::KEY_CLIENT_IP);
         // $response[Constants::KEY_CLIENT_IP . '_'] = $_SERVER['REMOTE_ADDR'];
 
-        $response[Constants::KEY_ACTION] = Broker::ACTION_REDIRECT;
+        $response[Constants::KEY_ACTION] = \Harpya\SDK\IdentityProvider\Broker::ACTION_REDIRECT;
 
         // create token, store data on DB, and send back the token
 
@@ -431,7 +452,7 @@ class AuthController extends BaseController
 
     protected function getRegisteredApplication()
     {
-        $application = Application::findRegisteredApplication(
+        $application = ApplicationModel::findRegisteredApplication(
             $this->request->get(Constants::KEY_APPLICATION_ID),
             $this->request->get(Constants::KEY_APPLICATION_SECRET),
             $_SERVER['REMOTE_ADDR']
