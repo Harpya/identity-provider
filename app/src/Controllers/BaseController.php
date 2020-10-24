@@ -85,4 +85,19 @@ class BaseController extends Controller
     {
         return $this->security->checkTokenOk($this);
     }
+
+    public function checkIfIsLogged()
+    {
+        $authData = $this->session->get('auth_data');
+        if ($authData) {
+            $this->response->setStatusCode(302);
+            $this->response->setHeader(
+                'Location',
+                 '/identity/profile'
+            );
+            $this->response->send();
+            exit;
+        }
+        return $this;
+    }
 }

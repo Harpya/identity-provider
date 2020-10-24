@@ -26,4 +26,19 @@ class User extends Model
         ]);
         return $resp;
     }
+
+    public function checkIfExists()
+    {
+        $userModel = static::findFirst([
+            'email = :email: ',
+            'bind' => ['email' => $this->email]
+        ]);
+
+        if ($userModel) {
+            if ($userModel->status == self::STATUS_INACTIVE) {
+                throw new \Exception("User {$this->email} already exists, but is inactive.");
+            }
+            throw new \Exception("User {$this->email} already exists.");
+        }
+    }
 }

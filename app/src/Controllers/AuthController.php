@@ -214,32 +214,13 @@ class AuthController extends BaseController
                     $this->renderPageLogin($response);
                     return;
                 }
-                // $client = new \GuzzleHttp\Client();
-                // try {
-                //     $appReturn = $client->request('POST', $urlAuthorize, [
-                //         'form_params' => [
-                //             'token' => $token,
-                //             'client_ip' => $_SERVER['REMOTE_ADDR'],
-                //             'email' => $user->email,
-                //             'session_id' => $remoteSessionID
-                //         ]
-                //     ]);
-                // } catch (\Exception $e) {
-                //     echo '<pre>';
-                //     echo $e->getMessage();
-                //     echo "\n " . $e->getTraceAsString();
-                //     exit;
-                // }
-
-                // $appReturnContents = $appReturn->getBody()->getContents();
             }
             $sessionEstablishedModel->save();
 
             $authData = $sessionEstablishedModel->jsonSerialize();
 
             $sid = $this->session->getId();
-            $this->persistent->authData =
-                        $authData;
+            $this->session->set('auth_data', $authData);
 
             // redirect to requestor
             $this->response->setStatusCode(302);
@@ -374,7 +355,7 @@ class AuthController extends BaseController
             $response['msg'] = 'Application not found';
             $response['success'] = false;
 
-            $this->response->setStatusCode(302);
+            // $this->response->setStatusCode(302);
             // $this->response->setHeader(
             //     'Location',
             //      $urlRedirect
@@ -466,7 +447,7 @@ class AuthController extends BaseController
         $response['msg'] = 'Application not found';
         $response['success'] = false;
 
-        $this->response->setStatusCode(302);
+        // $this->response->setStatusCode(302);
 
         $this->response->setContent(json_encode($response));
         $this->response->send();

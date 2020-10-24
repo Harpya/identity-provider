@@ -12,15 +12,10 @@ use Harpya\IP\VOs\LoginVO;
 use \Harpya\IP\Models\AuthRequest;
 use \Harpya\IP\Models\SessionEstablished;
 use \Harpya\SDK\IdentityProvider\Utils;
+use \Harpya\IP\Models\User;
 
 class IdentityController extends BaseController
 {
-    public function initialize()
-    {
-        parent::initialize();
-        // $this->view->setVar('my_var', 12345);
-    }
-
     /**
      * Display the signup page
      */
@@ -82,133 +77,67 @@ class IdentityController extends BaseController
         $this->response->send();
     }
 
-    // public function signupAction(): void
-    // {
-    //     if ($this->request->isGet()) {
-    //         $this->getSignup();
-    //     } elseif ($this->request->isPost()) {
-    //         $this->postSignup();
-    //     } else {
-    //         $this->dispatcher->forward([
-    //             'controller' => 'errors',
-    //             'action' => 'show401',
-    //             'params' => [
-    //                 'msg' => 'Invalid method'
-    //             ]
-    //         ]);
-    //     }
-    // }
-
-    // protected function getSignup()
-    // {
-    //     $this->view->setVar('option', 'show_signup_form');
-    // }
-
-    // protected function postSignup()
-    // {
-    //     $this->view->setVar('option', 'show_signup_results');
-    // }
-
-    /**
-     *
-     */
-    // public function signupAction222()
-    // {
-    //     if ($this->request->isPost()) {
-    //         try {
-    //             $this->checkCsrfToken();
-
-    //             $response = \Harpya\IP\Services\Signup::execute(
-    //                 SignupVO::factory(
-    //                     SignupVO::class,
-    //                 [
-    //                     'email' => $this->request->getPost('email'),
-    //                     'password' => $this->request->getPost('password'),
-    //                     'confirm_password' => $this->request->getPost('confirm_password'),
-    //                     'accept_terms' => $this->request->getPost('accept_terms')
-    //                 ]
-    //                 )
-    //             )->toArray();
-    //         } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'errors',
-    //                 'action' => 'show500',
-    //             ]);
-    //             return ;
-    //         } catch (\Harpya\IP\Exceptions\ValidationException $ex) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'signup',
-    //                 'params' => [
-    //                     [
-    //                         'error' => true,
-    //                         'msg' => $ex->getMessage(),
-    //                         'status_code' => 400
-    //                     ]
-    //                 ]
-    //             ]);
-    //             return ;
-    //         }
-
-    //         if ($response['success']) {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'index',
-    //                 'params' => [
-    //                     [
-    //                         'error' => false,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 200
-    //                     ]
-    //                 ]
-    //             ]);
-    //         } else {
-    //             $this->dispatcher->forward([
-    //                 'controller' => 'index',
-    //                 'action' => 'signup',
-    //                 'params' => [
-    //                     [
-    //                         'error' => true,
-    //                         'msg' => $response['msg'],
-    //                         'status_code' => 400
-    //                     ]
-    //                 ]
-    //             ]);
-    //         }
-    //     } else {
-    //         // shows page
-    //         // $this->dispatcher->forward([
-    //         //     'controller' => 'index',
-    //         //     'action' => 'index',
-    //         // ]);
-    //     }
-    // }
-
-    // public function profileAction()
-    // {
-    //     // show current logged user.
-    //     $sessionData = $this->session->get('auth_data');
-    //     print_r($sessionData);
-    //     echo "\n\n ----- \n";
-    //     print_r($_SESSION);
-    //     // exit;
-    //     return Constants::RESPONSE_PROCEED_VIEW_PROCESSING;
-    // }
-
     public function showProfile()
     {
-        $this->session->start();
-        echo '<pre>';
-        var_dump($this->persistent->authData);
-        // show current logged user.
-        $sessionData = $this->session->get('auth_data');
-        print_r($sessionData);
-        echo "\n\n ----- \n";
-        echo $this->session->getId();
-        echo "\n\n ----- \n";
-        echo \session_id();
-        echo "\n\n ----- \n";
-        print_r($_SESSION);
+        $userData = [];
+        $authData = $this->session->get('auth_data');
+        $userID = $authData['user_id'] ?? false;
+
+        if ($userID) {
+            $user = User::findFirst([
+                'id = :id:',
+                'bind' => ['id' => $userID]
+            ]);
+
+            // $this->session->start();
+            // echo '<pre>';
+            $userData = $user->jsonSerialize();
+        } else {
+            // go to login
+            $this->response->setStatusCode(302);
+
+            $this->response->setHeader('Location', '/');
+            $this->response->send();
+        }
+
+        // $response = [];
+
+        // $sessionData = $this->session->get('auth_data');
+
+        // $response['session'] = $sessionData;
+        // $response['email'] = $this->persistent->authData['user_id'];
+        // print_r($sessionData);
+
+        // $userData['_'] = $userData ;
+
+        $data = [
+            'user' => $userData,
+            'now' => date('Y-m-d H:i:s'),
+            'user_dyn_attributes' => [
+                [
+                    'name' => 'Name',
+                    'value' => 'Ed'
+                ],
+            ],
+            'user_hist_applications' => [
+                [
+                    'name' => 'last',
+                    'url' => 'http://localhost:1991/'
+                ]
+            ]
+        ];
+
+        $this->view->getRender(
+            'identity',
+            'profile',
+            $data
+        );
+
+        $this->response->setContent($this->view->getContent());
+        // $this->response->setStatusCode($response['status_code'] ?? 200);
+
+        $this->response->send();
+
         exit;
     }
 }

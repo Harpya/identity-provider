@@ -28,15 +28,18 @@ class Signup
             // throw new \Harpya\IP\Exceptions\ValidationException('Small password');
             $response->bind(['success' => false,  'msg' => "Error creating $email: password confirmation does not match"]);
         } else {
-            $user = \Harpya\IP\Builders\User::fromEmailPassword($email, $password);
-            $user->status = User::STATUS_ACTIVE;
-
             try {
+                $user = \Harpya\IP\Builders\User::fromEmailPassword($email, $password);
+
+                $user->checkIfExists();
+
+                $user->status = User::STATUS_ACTIVE;
+
                 $user->save();
 
                 $response->bind(['success' => true,  'msg' => "$email created with success  ", 'user_id' => $user->id]);
             } catch (\Exception $ex) {
-                $response->bind(['success' => false,  'msg' => "Error creating $email: " . $ex->getMessage()]);
+                $response->bind(['success' => false,  'msg' => $ex->getMessage()]);
             }
         }
         return $response;

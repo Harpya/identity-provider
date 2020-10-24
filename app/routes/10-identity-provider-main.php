@@ -15,7 +15,7 @@ $app = $this;
  *
  */
 $app->get('/identity/signup', function () use ($app) {
-    IdentityController::getInstance($app->getDI())->preSignup();
+    IdentityController::getInstance($app->getDI())->checkIfIsLogged()->preSignup();
 });
 
 /**
@@ -34,14 +34,18 @@ $app->get('/auth/login/{token}', function ($token) use ($app) {
 });
 
 $app->get('/auth/login', function () use ($app) {
-    AuthController::getInstance($app->getDI())->showPageLogin();
+    AuthController::getInstance($app->getDI())->checkIfIsLogged()->showPageLogin();
 });
 
 $app->post('/auth/login', function () use ($app) {
     AuthController::getInstance($app->getDI())->doLogin();
 });
 
-$app->get('/profile', function () use ($app) {
+$app->get('/auth/logout', function () use ($app) {
+    AuthController::getInstance($app->getDI())->doLogout();
+});
+
+$app->get('/identity/profile', function () use ($app) {
     IdentityController::getInstance($app->getDI())->showProfile();
 });
 
@@ -56,6 +60,17 @@ $app->post('/api/v1/auth_request', function () use ($app) {
 
 $app->notFound(
     function () use ($app) {
+        $authData = $app->session->get('auth_data');
+        if ($authData) {
+            $app->response->setStatusCode(302);
+            $app->response->setHeader(
+                'Location',
+                 '/identity/profile'
+            );
+            $app->response->send();
+            return;
+        }
+
         $urlRedirect = getenv(Constants::CONFIG_HIP_HOSTNAME) . getenv(Constants::CONFIG_HIP_DEFAULT_URL);
         $app->response->setStatusCode(302);
         $app->response->setHeader(
