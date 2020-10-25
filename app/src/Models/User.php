@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Harpya\IP\Models;
 
-use Phalcon\Mvc\Model;
+// use Phalcon\Mvc\Model;
+use Harpya\IP\Lib\Model;
 
 class User extends Model
 {

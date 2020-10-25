@@ -63,4 +63,12 @@ class BaseVO
             return $this->$key;
         }
     }
+
+    public function set($key, $value)
+    {
+        if (\property_exists(static::class, $key)) {
+            $this->$key = $value;
+        }
+        return $this;
+    }
 }

@@ -13,12 +13,19 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-5  toppad  pull-right col-md-offset-3 ">
-                <!-- <A href="edit.html">Edit Profile</A> -->
+            <div class="col-md-12  toppad   ">
 
-                <A href="/auth/logout">Logout</A>
+                <span class="pull-right col-md-offset-3">
+
+                    <a data-original-title="Remove this user" data-toggle="tooltip" type="button" href="/auth/logout"
+                        class="btn  btn-danger"><i class="glyphicon glyphicon-remove-circle"></i> Logout</a>
+
+                </span>
+
+
+
                 <br>
-                <p class=" text-info">{{ now }} </p>
+                <p class=" text-info">{{ date }} </p>
             </div>
             <div
                 class="col-xs-12 col-sm-12 col-md-6 col-lg-6 col-xs-offset-0 col-sm-offset-0 col-md-offset-3 col-lg-offset-3 toppad">
@@ -26,7 +33,23 @@
 
                 <div class="panel panel-info">
                     <div class="panel-heading">
-                        <h3 class="panel-title">{{ user['name']  | default(user['email'])  }}</h3>
+                        {#
+                        <span class="pull-right">
+
+                            <a href="edit.html" data-original-title="Edit this user" data-toggle="tooltip" type="button"
+                                class="btn  btn-info"><i class="glyphicon glyphicon-eye-open"></i></a>
+
+                            <a href="edit.html" data-original-title="Edit this user" data-toggle="tooltip" type="button"
+                                class="btn  btn-warning"><i class="glyphicon glyphicon-edit"></i></a>
+
+                            <a data-original-title="Remove this user" data-toggle="tooltip" type="button"
+                                class="btn  btn-danger"><i class="glyphicon glyphicon-remove"></i></a>
+
+                        </span>
+                        #}
+                        <span class="panel-title">{{ user.name  | default(user.email)   }}</span>
+
+
                     </div>
                     <div class="panel-body">
                         <div class="row">
@@ -36,24 +59,35 @@
 
                             <div class=" col-md-9 col-lg-9 ">
                                 <table class="table table-user-information">
+
                                     <tbody>
+
+                                        {# 
                                         {% for attribute in user_dyn_attributes %}
                                         <tr>
                                             <td>{{ attribute['name'] }}</td>
                                             <td>{{ attribute['value'] }}</td>
                                         </tr>
                                         {%  endfor %}
+                                        #}
+
                                         <tr>
                                             <td>Email:</td>
-                                            <td>{{ user['email'] }}</td>
+                                            <td>{{ user.email }}</td>
                                         </tr>
                                         <tr>
-                                            <td>Signup at:</td>
-                                            <td>{{ user['created_at'] }}</td>
+                                            <td>Created at:</td>
+                                            <td>{{ user.created_at | date_format  }}</td>
                                         </tr>
                                         <tr>
                                             <td>Last update:</td>
-                                            <td>{{ user['updated_at']|default(user['created_at'] ) }}</td>
+                                            <td>{{ user.updated_at|default(user.created_at) | date_format }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Last login:</td>
+                                            <td>{{ dateTimeLastLogin | date_format   }}
+                                            </td>
                                         </tr>
 
 
@@ -63,7 +97,7 @@
                                     </tbody>
                                 </table>
 
-
+                                {#
                                 <div>
                                     {% for hist in user_hist_applications %}
                                     <div>
@@ -71,15 +105,12 @@
                                     </div>
                                     {% endfor %}
                                 </div>
-
+                                #}
                             </div>
                         </div>
                     </div>
+                    {# 
                     <div class="panel-footer">
-                        <!-- <a data-original-title="Broadcast Message" data-toggle="tooltip" type="button"
-                            class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-envelope"></i></a> -->
-
-                        <!-- <span class="pull-right"> -->
 
                         <a href="edit.html" data-original-title="Edit this user" data-toggle="tooltip" type="button"
                             class="btn btn-sm btn-warning"><i class="glyphicon glyphicon-edit"></i></a>
@@ -87,8 +118,9 @@
                         <a data-original-title="Remove this user" data-toggle="tooltip" type="button"
                             class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-remove"></i></a>
 
-                        <!-- </span> -->
+
                     </div>
+                    #}
 
                 </div>
             </div>

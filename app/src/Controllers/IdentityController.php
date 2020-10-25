@@ -111,8 +111,9 @@ class IdentityController extends BaseController
         // $userData['_'] = $userData ;
 
         $data = [
-            'user' => $userData,
+            'user' => $user,
             'now' => date('Y-m-d H:i:s'),
+            'dateTimeLastLogin' => (new \Harpya\IP\BOs\User($user->email))->load()->getInfoLastLogin()->get('dateTime'),
             'user_dyn_attributes' => [
                 [
                     'name' => 'Name',
