@@ -15,5 +15,21 @@ return new Config([
     'application' => [
         'viewsDir' => getenv('VIEWS_DIR'),
         'baseUri' => getenv('BASE_URI'),
+        'siteName' => getenv('APP_SITE_NAME'),
+        'siteURL' => getenv('APP_SITE_URL'),
+        'customerServiceEmail' => getenv('APP_CUSTOMER_SERVICE_EMAIL'),
+        'hipBaseURL' => getenv('HIP_HOSTNAME'),
+    ],
+    'communication' => [
+        'mail' => [
+            'host' => getenv('MAIL_HOST'),
+            'port' => getenv('MAIL_PORT'),
+            'username' => getenv('MAIL_USERNAME'),
+            'password' => getenv('MAIL_PASSWORD'),
+            'fromEmail' => getenv('MAIL_FROM_EMAIL'),
+            'fromName' => getenv('MAIL_FROM_NAME'),
+        ]
+    ],
+    'features' => [
     ],
 ]);

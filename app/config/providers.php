@@ -9,4 +9,5 @@ return [
     \Harpya\IP\Providers\ViewProvider::class,
     \Harpya\IP\Providers\VoltProvider::class,
     \Harpya\IP\Providers\SecurityProvider::class,
+    \Harpya\IP\Providers\MailProvider::class,
 ];
