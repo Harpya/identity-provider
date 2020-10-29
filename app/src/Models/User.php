@@ -28,6 +28,15 @@ class User extends Model
         return $resp;
     }
 
+    public static function getByEmail($email)
+    {
+        $resp = static::findFirst([
+            'email = :email: ',
+            'bind' => ['email' => $email]
+        ]);
+        return $resp;
+    }
+
     public function checkIfExists()
     {
         $userModel = static::findFirst([

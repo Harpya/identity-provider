@@ -66,7 +66,7 @@
                             </div>
                              -->
 
-                            <a href="#" class="reset-password">Forgot password?</a>
+                            <a href="/password/forgot" class="reset-password">Forgot password?</a>
 
                             <div class="col-md-12 ">
                                 <div class="login-or">
