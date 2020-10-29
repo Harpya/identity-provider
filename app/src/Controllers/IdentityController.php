@@ -42,19 +42,23 @@ class IdentityController extends BaseController
     {
         $response = [];
         try {
-            $this->checkCsrfToken();
-
-            $response = \Harpya\IP\Services\Signup::execute(
-                SignupVO::factory(
-                    SignupVO::class,
-                [
-                    'email' => $this->request->getPost('email'),
-                    'password' => $this->request->getPost('password'),
-                    'confirm_password' => $this->request->getPost('confirm_password'),
-                    'accept_terms' => $this->request->getPost('accept_terms')
-                ]
-                )
-            )->toArray();
+            if ($this->checkCsrfToken()) {
+                $response = \Harpya\IP\Services\Signup::execute(
+                    SignupVO::factory(
+                        SignupVO::class,
+                    [
+                        'email' => $this->request->getPost('email'),
+                        'password' => $this->request->getPost('password'),
+                        'confirm_password' => $this->request->getPost('confirm_password'),
+                        'accept_terms' => $this->request->getPost('accept_terms')
+                    ]
+                    )
+                )->toArray();
+            } else {
+                $response['error'] = true;
+                $response['msg'] = 'Error on data';
+                $response['status_code'] = 500;
+            }
         } catch (\Harpya\IP\Exceptions\CsrfTokenException $ex) {
             $response['error'] = true;
             $response['msg'] = $ex->getMessage();
