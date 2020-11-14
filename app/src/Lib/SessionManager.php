@@ -28,4 +28,17 @@ class SessionManager extends Manager
 
         return $this;
     }
+
+    /**
+     * Removes a given session.
+     *
+     * @param string $sessionID
+     * @return void
+     */
+    public function removeSession(string $sessionID)
+    {
+        $sql = "DELETE FROM sessions WHERE sess_id='$sessionID'";
+        $app = \Harpya\IP\Application::getInstance();
+        $resp = $app->db->query($sql);
+    }
 }

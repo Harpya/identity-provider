@@ -58,6 +58,11 @@ $app->post('/api/v1/auth_request', function () use ($app) {
     return;
 });
 
+$app->post('/api/v1/logout', function () use ($app) {
+    AuthController::getInstance($app->getDI())->authLogout();
+    return;
+});
+
 $app->notFound(
     function () use ($app) {
         $authData = $app->session->get('auth_data');

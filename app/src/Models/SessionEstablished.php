@@ -8,6 +8,10 @@ use Phalcon\Mvc\Model;
 
 class SessionEstablished extends Model
 {
+    const SESSION_PENDENT = 1;
+    const SESSION_ACTIVE = 2;
+    const SESSION_INACTIVE = 3;
+
     public function initialize()
     {
         $this->setSource('sessions_established');

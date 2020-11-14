@@ -30,20 +30,18 @@ class SessionProvider implements ServiceProviderInterface
 
             $session->setAdapter($dbSession);
 
-            // $session->start();
-
             return $session;
         });
 
         $di->set(
-    'cookies',
-    function () {
-        $cookies = new Cookies();
+            'cookies',
+            function () {
+                $cookies = new Cookies();
 
-        $cookies->useEncryption(false);
+                $cookies->useEncryption(false);
 
-        return $cookies;
-    }
-);
+                return $cookies;
+            }
+        );
     }
 }

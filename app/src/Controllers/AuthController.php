@@ -31,6 +31,9 @@ class AuthController extends BaseController
         $response = [];
 
         if ($token) {
+            // TODO: enable log
+            // $this->domLogger->debug("Show login page with token $token");
+
             // retrieve and validate initial request
             $token = $this->sanitizeToken($token);
 
@@ -40,6 +43,8 @@ class AuthController extends BaseController
             ]);
 
             if ($initialRequestModel) {
+                // TODO: enable log
+                // $this->domLogger->debug('Initial request fount', ['record' => $initialRequestModel->jsonSerialize()]);
                 try {
                     $initialRequestVO = InitialAuthRequestVO::factory(InitialAuthRequestVO::class, [
                         'ipAddress' => $initialRequestModel->ip_address,
@@ -99,6 +104,11 @@ class AuthController extends BaseController
         return $finalToken;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
     public function doLogin()
     {
         try {
@@ -124,6 +134,8 @@ class AuthController extends BaseController
 
             $remoteSessionID = Utils::generateRandomToken();
 
+            // The current session should be removed when this script finishes,
+            // to avoid keep any sensitive data on it.
             $this->session->getAdapter()->markToRemoveSession(session_id());
 
             $this->session->getAdapter()->setSessionID(Utils::getSIDFromSessionToken($remoteSessionID)) ;
@@ -316,15 +328,12 @@ class AuthController extends BaseController
             return ;
         }
 
-        $sessionEstablishedModel->setStatus(2)->save();
-        // $sessionEstablishedModel->status = 2;
-        // $sessionEstablishedModel->updated_at = 'now()';
-        // $sessionEstablishedModel->save();
+        $sessionEstablishedModel->setStatus(SessionEstablished::SESSION_ACTIVE)
+                                ->save();
 
         $this->response->setStatusCode(200);
 
         $response = ['email' => $userModel->email, 'session_id' => $sessionEstablishedModel->remote_session_id];
-        // Constants::KEY_USER_EMAIL
 
         $this->response->setContent(json_encode($response));
         $this->response->send();
@@ -354,12 +363,6 @@ class AuthController extends BaseController
             http_response_code(403);
             $response['msg'] = 'Application not found';
             $response['success'] = false;
-
-            // $this->response->setStatusCode(302);
-            // $this->response->setHeader(
-            //     'Location',
-            //      $urlRedirect
-            // );
 
             $this->response->setContent(json_encode($response));
             $this->response->send();
@@ -425,6 +428,30 @@ class AuthController extends BaseController
 
         $this->response->setContent(json_encode($response));
         $this->response->send();
+    }
+
+    /**
+     * Force logout of a given session_id
+     *
+     * @return void
+     */
+    public function authLogout()
+    {
+        $sessionID = $this->request->getPost('session_id');
+
+        if ($sessionID) {
+            $sessionEstablished = SessionEstablished::findFirst([
+                'remote_session_id = :sessionID:',
+                'bind' => ['sessionID' => Utils::getSessionTokenFromSessionID($sessionID)]
+            ]);
+
+            if ($sessionEstablished) {
+                $sessionEstablished->setStatus(SessionEstablished::SESSION_INACTIVE)
+                                    ->save();
+            }
+
+            $this->session->removeSession($sessionID);
+        }
     }
 
     // -------------------------------
