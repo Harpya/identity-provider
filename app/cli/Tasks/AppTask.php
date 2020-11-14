@@ -169,8 +169,6 @@ class AppTask extends Task
         echo "\n URL After..: " . $arr['url_after_login'] ;
         echo "\n Created at.: " . $arr['created_at'] ;
 
-        // print_r($arr);
-
         echo "\n\n";
     }
 }
