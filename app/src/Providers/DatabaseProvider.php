@@ -15,7 +15,12 @@ class DatabaseProvider implements ServiceProviderInterface
             $dbClass = 'Phalcon\Db\Adapter\Pdo\\' . $dbConfig['adapter'];
             unset($dbConfig['adapter']);
 
-            return new $dbClass($dbConfig);
+            $db = new $dbClass($dbConfig);
+
+            if (is_null($db)) {
+                throw new \Exception('Error connecting DB');
+            }
+            return $db;
         });
     }
 }
