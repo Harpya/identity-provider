@@ -28,7 +28,7 @@ class DispatcherProvider implements ServiceProviderInterface
             /**
              * Handle exceptions and not-found exceptions using NotFoundPlugin
              */
-            $eventsManager->attach('dispatch:beforeException', new NotFoundPlugin);
+            // $eventsManager->attach('dispatch:beforeException', new NotFoundPlugin);
 
             $dispatcher = new Dispatcher();
             $dispatcher->setDefaultNamespace('Harpya\IP\Controllers');
